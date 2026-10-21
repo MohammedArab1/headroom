@@ -59,24 +59,25 @@ units.
 
 ## Current implementation
 
-Phases 0 to 4 are implemented:
+Phases 0 to 6 are implemented:
 
 ```sh
 scripts/connect.sh <hu-ip>
 scripts/preflight.sh
 scripts/discover.sh
+scripts/configure.sh ...
 scripts/close-adb.sh <hu-ip>
 ```
 
 `preflight.sh` is read-only. It writes the first snapshot, which is the record
 undo will depend on, and never overwrites an existing one. `discover.sh` is
 read-only: it writes `report/discover-<date>.txt` and suggests a profile, but
-it never disables anything. `connect.sh` never scans the network: the IP comes
-from the person.
+it never disables anything. `configure.sh` writes only `headroom.conf` (mode
+600, git-ignored); it never changes the unit. `connect.sh` never scans the
+network: the IP comes from the person.
 
 The destructive scripts do not exist yet. Do not improvise them. The next
-phases are `configure.sh` and `benchmark.sh`, then `debloat.sh` one tier at a
-time.
+phases are `benchmark.sh`, then `debloat.sh` one tier at a time.
 
 ## Order of operations (once the full tool exists)
 
