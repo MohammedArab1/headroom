@@ -59,7 +59,7 @@ units.
 
 ## Current implementation
 
-Phases 0 to 14 are implemented (the launcher is written but has not been built
+Phases 0 to 15 are implemented (the launcher is written but has not been built
 here: this machine had no JDK or Android SDK):
 
 ```sh
@@ -78,6 +78,7 @@ scripts/launcher.sh -y
 scripts/stock-launcher.sh --disable          # optional, after the 2-boot soak
 scripts/verify.sh                            # after a firmware update: drift.sh
 scripts/drift.sh
+scripts/all.sh
 scripts/close-adb.sh <hu-ip>
 ```
 
@@ -114,7 +115,8 @@ launcher only after a 2-boot soak, applies every non-HOME guard (with
 `drift.sh` reports packages that came back, HOME, tweaks, new preloads and a
 changed build; `--fix` re-applies the packages through fresh guards, re-applies
 the recorded tweaks with the Private DNS self-test, and re-takes HOME with the
-install rollback logic. The next phase is `all.sh` (Phase 15).
+install rollback logic. `all.sh` runs the whole pass and stops at every gate.
+The next phase is the catalog and `contribute.sh` (Phase 16).
 
 ## Order of operations (once the full tool exists)
 
