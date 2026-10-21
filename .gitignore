@@ -18,5 +18,6 @@ launcher/app/build/
 launcher/local.properties
 launcher/headroom.local.properties
 *.apk
+!tests/fixtures/empty.apk
 *.keystore
 .DS_Store

@@ -59,7 +59,7 @@ units.
 
 ## Current implementation
 
-Phases 0 to 12 are implemented (the launcher is written but has not been built
+Phases 0 to 13 are implemented (the launcher is written but has not been built
 here: this machine had no JDK or Android SDK):
 
 ```sh
@@ -74,6 +74,8 @@ scripts/debloat.sh --tier 1 -y
 scripts/restore.sh --last
 scripts/bisect.sh --batch <id> --answers "y n ..."
 scripts/tune.sh -y
+scripts/launcher.sh -y
+scripts/stock-launcher.sh --disable          # optional, after the 2-boot soak
 scripts/close-adb.sh <hu-ip>
 ```
 
@@ -98,7 +100,16 @@ Phase 12 is the launcher in `launcher/`. Its pure-Java logic (`App`,
 glue and resources are written. `tests/test_launcher_static.py` enforces zero
 permissions, no background components, no runtime dependencies and the SDK
 floor. To build it, follow `launcher/README.md`; the Gradle wrapper has not been
-generated yet. The next phase is launcher install and handover (Phase 13).
+generated yet.
+
+Phase 13 is the handover: `launcher/install.sh` (also reachable as
+`scripts/launcher.sh`) builds or takes `--apk`, pushes and runs `pm install -r`,
+starts the launcher **before** touching HOME, and rolls back with
+`report/launcher-rollback.txt` and `STATE/set-home-ignored` when the firmware
+ignores `set-home-activity`. `scripts/stock-launcher.sh` disables the vendor
+launcher only after a 2-boot soak, applies every non-HOME guard (with
+`IGNORE_HOME_GUARD` for the HOME ones), and re-enables it if HOME does not stay.
+The next phase is `drift.sh` (Phase 14).
 
 ## Order of operations (once the full tool exists)
 

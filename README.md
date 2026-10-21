@@ -26,6 +26,8 @@ Implemented and covered by offline tests:
 - Phase 12: the `launcher/` app (headroom home) — source and static acceptance
   checks; it has not been compiled or run here (no JDK or Android SDK on this
   machine yet)
+- Phase 13: `launcher/install.sh`, `scripts/launcher.sh` and
+  `scripts/stock-launcher.sh` (handover, 2-boot soak gate, rollback)
 
 Not built yet: `drift.sh`, `all.sh`, and the catalog tooling.
 

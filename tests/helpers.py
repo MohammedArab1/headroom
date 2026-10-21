@@ -82,8 +82,12 @@ class Run:
 
     def __call__(self, script, *args, stdin=""):
         # /bin/bash on purpose: on macOS it is bash 3.2, the version the scripts must support.
+        path = Path(script)
+        if not path.is_absolute():
+            direct = ROOT / path
+            path = direct if direct.exists() else ROOT / "scripts" / path
         return subprocess.run(
-            ["/bin/bash", str(ROOT / "scripts" / script), *args],
+            ["/bin/bash", str(path), *args],
             env=self.env(),
             input=stdin,
             text=True,

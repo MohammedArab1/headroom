@@ -74,6 +74,16 @@ if args == ["reboot"]:
             S["disabled"].remove(p)
     save()
     reply()
+if args[:1] == ["push"]:
+    if len(args) != 3:
+        sys.exit(93)
+    source, target = args[1], args[2]
+    if target in S.get("push_fail", []):
+        print(f"adb: error: failed to copy '{source}' to '{target}'", file=sys.stderr)
+        sys.exit(1)
+    S.setdefault("pushed", []).append(target)
+    save()
+    reply(f"{source}: 1 file pushed")
 if args[:1] != ["shell"]:
     sys.exit(93)
 cmd = " ".join(args[1:])
@@ -162,6 +172,14 @@ if m:
         if m.group(1) in S["installed"]
         else ""
     )
+m = re.fullmatch(r"pm install -r (\S+)", cmd)
+if m:
+    if "install_reply" in S:
+        reply(S["install_reply"])
+    if "app.headroom.home" not in S["installed"]:
+        S["installed"].append("app.headroom.home")
+    save()
+    reply("Success")
 m = re.fullmatch(r"pm disable-user --user 0 (\S+)", cmd)
 if m:
     p = m.group(1)
@@ -171,6 +189,11 @@ if m:
         )
     if p not in S["disabled"]:
         S["disabled"].append(p)
+    # Android drops the HOME preference when the set of HOME apps changes, even when a
+    # different launcher currently owns HOME.
+    home_pkgs = [c.split("/", 1)[0] for c in S.get("home_claims", [S["home"]])]
+    if p in home_pkgs and "home_after_disable" in S:
+        S["home"] = S["home_after_disable"]
     save()
     reply(f"Package {p} new state: disabled-user")
 m = re.fullmatch(r"pm enable --user 0 (\S+)", cmd)
@@ -209,8 +232,10 @@ if m:
 if cmd.startswith("cmd package resolve-activity --brief") and "category.HOME" in cmd:
     reply("priority=0 preferredOrder=0 match=0x108000\n" + S["home"])
 if cmd.startswith("cmd package set-home-activity --user 0 "):
-    S["home"] = cmd[len("cmd package set-home-activity --user 0 ") :]
-    save()
+    target = cmd[len("cmd package set-home-activity --user 0 ") :]
+    if not S.get("ignore_set_home"):
+        S["home"] = target
+        save()
     reply("Success")
 if (
     cmd.startswith("cmd package resolve-activity --brief")
@@ -257,6 +282,8 @@ if cmd == "am start -a android.intent.action.MAIN -c android.intent.category.HOM
     )
 if cmd.startswith("am start -W -n "):
     component = cmd[len("am start -W -n ") :]
+    if component in S.get("am_start_reply", {}):
+        reply(S["am_start_reply"][component])
     pkg = component.split("/", 1)[0]
     times = S.get("am_app_times", {}).get(pkg)
     if times:
