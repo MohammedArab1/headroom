@@ -71,6 +71,7 @@ scripts/verify.sh
 scripts/debloat.sh --tier 1 --dry-run
 scripts/debloat.sh --tier 1 -y
 scripts/restore.sh --last
+scripts/bisect.sh --batch <id> --answers "y n ..."
 scripts/close-adb.sh <hu-ip>
 ```
 
@@ -85,8 +86,8 @@ network: the IP comes from the person.
 snapshot, a non-empty verified profile, and every earlier batch checked. It
 writes the undo plan before the first disable, never uninstalls, and reboots.
 `restore.sh` replays those plans, restores tweaks in reverse and puts HOME back.
-`bisect.sh` does not exist yet; do not improvise it. The next phase is
-`bisect.sh`, then `tune.sh`.
+`bisect.sh` narrows a bad batch to one package with a person's answers. The next
+phase is `tune.sh`.
 
 ## Order of operations (once the full tool exists)
 
