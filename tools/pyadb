@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# adb stand-in for macOS Local Network privacy. Legacy TCP ADB only; see tools/pyadb.py.
+exec "$(dirname "$0")/venv/bin/python" -I "$(dirname "$0")/pyadb.py" "$@"

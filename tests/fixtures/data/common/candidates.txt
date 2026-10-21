@@ -1,0 +1,37 @@
+# tier 1: telemetry / feedback
+com.google.android.feedback                      1  # sends feedback reports
+# tier 2: system leftovers with no use in a car
+com.android.printspooler                         2  # printing
+com.android.bips                                 2  # built-in print service
+com.android.printservice.recommendation          2
+com.google.android.printservice.recommendation   2
+com.android.wallpaper.livepicker                 2  # live wallpapers (cost GPU and RAM)
+com.android.wallpaperbackup                      2
+com.android.dreams.basic                         2  # screensavers
+com.android.dreams.phototable                    2
+com.android.egg                                  2  # Android easter egg
+com.android.traceur                              2  # system tracing (may come back at boot; dumbtv)
+com.android.sharedstoragebackup                  2
+com.android.backupconfirm                        2
+com.android.calllogbackup                        2
+com.android.dynsystem                            2  # dynamic system updates (GSI testing)
+com.google.android.apps.wellbeing                2  # Digital Wellbeing (background usage tracking)
+com.android.stk                                  2  # SIM toolkit: only without a SIM (configure asks)
+# tier 3: apps a person might use (asked one by one)
+com.android.email                                3
+com.android.calendar                             3
+com.android.gallery3d                            3
+com.android.music                                3
+com.android.browser                              3
+com.android.quicksearchbox                       3
+com.android.calculator2                          3
+com.android.chrome                               3  # on Android 7-9 Chrome may BE the WebView: check `dumpsys webviewupdate` first
+com.google.android.youtube                       3
+com.google.android.apps.youtube.music            3
+com.google.android.apps.photos                   3
+com.google.android.apps.docs                     3
+com.google.android.gm                            3
+com.google.android.videos                        3
+com.google.android.apps.tachyon                  3
+com.google.android.googlequicksearchbox          3  # the Google app = voice assistant on many units
+com.google.android.marvin.talkback               3  # accessibility: ask

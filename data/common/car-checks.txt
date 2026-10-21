@@ -1,0 +1,17 @@
+reverse     Parked, foot on the brake, clear space behind: select reverse. Does the camera picture appear within about 2 seconds?
+guides      Do the parking guide lines or the parking-sensor overlay still appear (answer s if you never had them)?
+swc         Do the steering-wheel buttons work: volume up/down, next/previous, answer/hang up?
+radio       Does the radio tune and play?
+bt-pair     Is your phone still paired and connected over Bluetooth?
+bt-call     Make a short call: can both sides hear each other clearly?
+bt-audio    Does music stream over Bluetooth with track info?
+usb-media   Does music from a USB stick play (s if you never use it)?
+nav         Does your navigation app get a GPS fix and show where you are?
+projection  Does CarPlay / Android Auto connect (s if you don't use it)?
+canbus      Do the car-info screens (doors, climate, fuel, parking sensors) still update (s if your unit never showed them)?
+dimming     Does the screen dim with the headlights (s if it never did)?
+mic         Does the microphone work for calls and voice?
+acc-sleep   Turn the ignition off and wait past the unit's sleep delay. Does the screen go dark and stay dark?
+acc-wake    Turn the ignition on again. Does the unit wake in its usual time, on the expected home screen, with sound?
+clock       Is the clock right after waking?
+keyboard    Does the on-screen keyboard appear when you tap a text field?

@@ -1,0 +1,17 @@
+can(bus)?([._]|$)
+mcu
+radio|tuner|(^|\.)fm([._]|$)|dab
+bluetooth|(^|\.)bt([._]|$)|hfp|a2dp
+phone|dialer|telecom|contacts|(^|\.)sms|mms
+camera|avm|360|reverse|backcar|rear|parking|radar|pdc
+steer|swc|keylearn|wheelkey
+(^|\.)amp([._]|$)|(^|\.)eq([._]|$)|dsp|audio|sound|volume|mixer|effect|musicfx
+tpms|dvr|dashcam
+gps|gnss|location
+navi
+carplay|androidauto|gearhead|projection|zlink|carlink|autolink|mirror
+setting|factory|engineer|(^|[._])(fac|test|cts)([._]|$)
+launcher|(^|\.)home([._]|$)|systemui|inputmethod|keyboard|(^|\.)ime([._]|$)
+wifi|network|connectivity|hotspot|tether
+power|sleep|(^|\.)acc([._]|$)|boot|time|clock|ntp
+provider|permission|installer|webview

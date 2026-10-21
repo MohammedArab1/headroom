@@ -1,0 +1,5 @@
+shell=bash
+disable=SC1090,SC1091
+# lib.sh is sourced: its variables and helpers are used by the sourcing scripts,
+# which shellcheck cannot see.
+disable=SC2034

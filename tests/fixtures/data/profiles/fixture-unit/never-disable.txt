@@ -1,0 +1,1 @@
+com.vendor.canbus             # fixture: the MCU bridge. Never disable.

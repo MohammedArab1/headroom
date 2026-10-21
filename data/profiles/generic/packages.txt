@@ -1,0 +1,7 @@
+# Generic fallback profile.
+#
+# This profile ships empty on purpose. headroom learns a unit from that unit's
+# own package list; it never guesses vendor package names.
+#
+# Build a real profile from `scripts/discover.sh` output:
+# docs/ADDING-A-UNIT.md.

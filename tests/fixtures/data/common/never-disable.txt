@@ -1,0 +1,8 @@
+com.android.documentsui            # file picker; apps need it to open files
+com.google.android.documentsui
+com.android.mtp
+com.android.se                     # secure element
+com.android.nfc
+com.android.carrierconfig
+com.android.defcontainer           # package installs on older Android
+com.android.emergency

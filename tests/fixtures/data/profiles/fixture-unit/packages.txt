@@ -1,0 +1,12 @@
+# Fixture Unit, fake SoC, claimed Android 13, real API 33, build TEST.1
+# Test fixture only. Evidence here exists to exercise the parser and guards.
+com.vendor.ads               1   # no launcher icon; promo receiver. Fixture.
+com.vendor.telemetry         1   # crash reporter. Fixture.
+com.vendor.promo             1   # promo push service. Fixture.
+com.android.printspooler     2   # print service. Fixture.
+com.android.dreams.basic     2   # screensaver. Fixture.
+com.vendor.updater           2   # firmware updater; kept by UPDATER_KEEP. Fixture.
+com.vendor.games             3   # game store. Fixture.
+com.vendor.music             3   # music app. Fixture.
+com.vendor.email             3   # email app. Fixture.
+com.vendor.weather           3   # weather app. Fixture.

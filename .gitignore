@@ -1,0 +1,20 @@
+# Household and device data never leaves this machine
+headroom.conf
+report/*
+!report/.keep
+*.log
+# tools
+tools/venv/
+tools/adbkey/
+tools/.pyadb-last
+__pycache__/
+*.pyc
+# launcher
+launcher/.gradle/
+launcher/build/
+launcher/app/build/
+launcher/local.properties
+launcher/headroom.local.properties
+*.apk
+*.keystore
+.DS_Store

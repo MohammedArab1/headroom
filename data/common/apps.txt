@@ -1,0 +1,15 @@
+Google Maps          com.google.android.apps.maps
+Waze                 com.waze
+Spotify              com.spotify.music
+YouTube Music        com.google.android.apps.youtube.music
+Android Auto         com.google.android.projection.gearhead
+OsmAnd               net.osmand
+HERE WeGo            com.here.app.maps
+Sygic                com.sygic.aura
+Magic Earth          com.generalmagic.magicearth
+VLC                  org.videolan.vlc
+Pocket Casts         au.com.shiftyjelly.pocketcasts
+Audible              com.audible.application
+Torque Pro           org.prowl.torque
+Chrome               com.android.chrome
+YouTube              com.google.android.youtube

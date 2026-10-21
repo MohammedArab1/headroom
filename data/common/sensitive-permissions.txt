@@ -1,0 +1,14 @@
+android.permission.INJECT_EVENTS          # steering-wheel key bridges inject key presses
+android.permission.DEVICE_POWER           # ACC sleep / wake handling
+android.permission.REBOOT
+android.permission.SYSTEM_ALERT_WINDOW    # reverse camera and parking overlays draw over apps
+android.permission.CAMERA                 # reverse, 360 and dashcam cameras
+android.permission.MODIFY_AUDIO_ROUTING   # radio, amplifier, audio focus
+android.permission.CAPTURE_AUDIO_OUTPUT
+android.permission.BLUETOOTH_PRIVILEGED   # hands-free and pairing
+android.permission.MODIFY_PHONE_STATE
+android.permission.CALL_PRIVILEGED
+android.permission.WRITE_SECURE_SETTINGS
+android.permission.SET_TIME
+android.permission.STATUS_BAR
+android.permission.MANAGE_USB
