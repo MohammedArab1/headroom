@@ -1,0 +1,43 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Per-car defaults, written by launcher/install.sh from headroom.conf. Never committed.
+def local = new Properties()
+def localFile = rootProject.file('headroom.local.properties')
+if (localFile.exists()) {
+    localFile.withInputStream { local.load(it) }
+}
+
+android {
+    namespace 'app.headroom.home'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'app.headroom.home'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '0.1'
+        resValue 'string', 'default_dock', local.getProperty('dock', '')
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    lint {
+        abortOnError true
+        checkReleaseBuilds true
+    }
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}

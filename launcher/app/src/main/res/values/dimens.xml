@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="edge">32dp</dimen>
+    <dimen name="clock">72sp</dimen>
+    <dimen name="date">22sp</dimen>
+    <dimen name="chip_min">76dp</dimen>
+</resources>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">headroom home</string>
+    <string name="all_apps">All apps</string>
+    <string name="options">Options</string>
+    <string name="settings">Settings</string>
+
+    <string name="add_to_dock">Add to dock</string>
+    <string name="remove_from_dock">Remove from dock</string>
+    <string name="move_left">Move left</string>
+    <string name="move_right">Move right</string>
+    <string name="hide">Hide</string>
+    <string name="app_info">App info</string>
+    <string name="cannot_open">Cannot open this app</string>
+
+    <string name="dock_slots">Dock slots</string>
+    <string name="clock_setting">Clock</string>
+    <string name="grid_columns">Grid columns</string>
+    <string name="hidden_apps">Hidden apps</string>
+    <string name="previous_home">Open the previous home screen</string>
+    <string name="reset">Reset to defaults</string>
+    <string name="about">About</string>
+    <string name="about_text">No permissions. No internet.</string>
+
+    <string name="clock_auto">Auto</string>
+    <string name="clock_12">12-hour</string>
+    <string name="clock_24">24-hour</string>
+    <string name="columns_auto">Auto</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="reset_question">Reset the dock, hidden apps and display settings?</string>
+    <string name="no_other_home">No other home screen is installed</string>
+</resources>

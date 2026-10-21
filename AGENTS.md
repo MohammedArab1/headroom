@@ -59,7 +59,8 @@ units.
 
 ## Current implementation
 
-Phases 0 to 11 are implemented:
+Phases 0 to 12 are implemented (the launcher is written but has not been built
+here: this machine had no JDK or Android SDK):
 
 ```sh
 scripts/connect.sh <hu-ip>
@@ -90,8 +91,14 @@ writes the undo plan before the first disable, never uninstalls, and reboots.
 `bisect.sh` narrows a bad batch to one package with a person's answers.
 `tune.sh` records every value it changes before the first change, refuses to
 background-restrict kept, docked or guarded apps, self-tests Private DNS and
-reverts both keys if the resolver does not answer. The next phase is the
-launcher (Phase 12).
+reverts both keys if the resolver does not answer.
+
+Phase 12 is the launcher in `launcher/`. Its pure-Java logic (`App`,
+`ConfigCodec`, `DockModel`, `GridMath`, `AppOrder`) has JUnit tests; the Android
+glue and resources are written. `tests/test_launcher_static.py` enforces zero
+permissions, no background components, no runtime dependencies and the SDK
+floor. To build it, follow `launcher/README.md`; the Gradle wrapper has not been
+generated yet. The next phase is launcher install and handover (Phase 13).
 
 ## Order of operations (once the full tool exists)
 
