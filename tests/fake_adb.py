@@ -259,6 +259,20 @@ if cmd == "logcat -b events -d":
             "01-01 00:00:00.000  1000  1000 I boot_progress_enable_screen: 12000\n",
         )
     )
+if cmd == "logcat -b crash -d":
+    reply(S.get("logcat_crash", ""))
+if cmd == "cat /proc/sys/kernel/random/boot_id":
+    reply(S.get("boot_id", "12345678-1234-1234-1234-123456789abc"))
+if cmd.startswith("ping -c 1 -W 3 "):
+    reply(
+        S.get(
+            "ping",
+            "PING connectivitycheck.gstatic.com (203.0.113.9) 56(84) bytes of data.\n",
+        )
+    )
+m = re.fullmatch(r"cmd appops get (\S+) (\S+)", cmd)
+if m:
+    reply(S.get("appops", {}).get(f"{m.group(1)} {m.group(2)}", "ignore"))
 if cmd == "ip route":
     reply(
         S.get(
