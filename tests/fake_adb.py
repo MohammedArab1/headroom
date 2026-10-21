@@ -106,6 +106,16 @@ if cmd == "cat /proc/cpuinfo":
         )
         + "\n"
     )
+if cmd == "cat /proc/loadavg":
+    reply(S.get("loadavg", "1.25 1.10 0.95 1/234 5678"))
+if cmd == "ps -A -o USER":
+    reply(S.get("ps_users", "USER\nroot\nu0_a10\nu0_a11\nu0_a12\n"))
+if cmd == "ps":
+    reply(
+        S.get(
+            "ps", "USER PID PPID\nroot 1 0\nu0_a10 100 1\nu0_a11 101 1\nu0_a12 102 1\n"
+        )
+    )
 if cmd == "df /data":
     reply(
         S.get(
@@ -186,6 +196,15 @@ if m:
     reply()
 if cmd.startswith("cmd package resolve-activity --brief") and "category.HOME" in cmd:
     reply("priority=0 preferredOrder=0 match=0x108000\n" + S["home"])
+if (
+    cmd.startswith("cmd package resolve-activity --brief")
+    and "category.LAUNCHER" in cmd
+):
+    pkg = cmd.split()[-1]
+    comps = S.get("launchers", {}).get(pkg, [])
+    if comps:
+        reply("priority=0 preferredOrder=0 match=0x108000\n" + comps[0])
+    reply("")
 if cmd.startswith("cmd package query-activities --brief") and "category.HOME" in cmd:
     reply("\n".join("  " + c for c in S.get("home_claims", [S["home"]])))
 if (
@@ -196,6 +215,50 @@ if (
     reply("\n".join("  " + c for c in S.get("launchers", {}).get(pkg, [])))
 if cmd == "dumpsys device_policy":
     reply(S.get("device_policy", ""))
+if cmd == "am start -W -a android.settings.SETTINGS":
+    reply(
+        S.get(
+            "am_settings",
+            "Starting: Intent { act=android.settings.SETTINGS }\nStatus: ok\nTotalTime: 300\n",
+        )
+    )
+if cmd == "am start -W -a android.intent.action.MAIN -c android.intent.category.HOME":
+    times = S.get("am_home_times")
+    if times:
+        i = S.get("am_home_calls", 0)
+        val = times[min(i, len(times) - 1)]
+        S["am_home_calls"] = i + 1
+        save()
+    else:
+        val = S.get("am_home_ms", 250)
+    reply(
+        "Starting: Intent { act=android.intent.action.MAIN "
+        f"cat=[android.intent.category.HOME] }}\nStatus: ok\nTotalTime: {val}\n"
+    )
+if cmd.startswith("am start -W -n "):
+    component = cmd[len("am start -W -n ") :]
+    pkg = component.split("/", 1)[0]
+    times = S.get("am_app_times", {}).get(pkg)
+    if times:
+        calls = S.setdefault("am_app_calls", {})
+        i = calls.get(pkg, 0)
+        val = times[min(i, len(times) - 1)]
+        calls[pkg] = i + 1
+        save()
+    else:
+        val = S.get("am_app_ms", 800)
+    reply(f"Starting: Intent {{ cmp={component} }}\nStatus: ok\nTotalTime: {val}\n")
+if cmd.startswith("am force-stop "):
+    reply()
+if cmd == "input keyevent KEYCODE_HOME":
+    reply()
+if cmd == "logcat -b events -d":
+    reply(
+        S.get(
+            "logcat_events",
+            "01-01 00:00:00.000  1000  1000 I boot_progress_enable_screen: 12000\n",
+        )
+    )
 if cmd == "ip route":
     reply(
         S.get(

@@ -17,10 +17,11 @@ Implemented and covered by offline tests:
 - Phase 4: `scripts/discover.sh` (read-only inventory and suggestions)
 - Phase 5 data files: `data/common/`, the generic profile, and the fixture profile
 - Phase 6: `scripts/configure.sh` (the interview and `headroom.conf`)
+- Phase 7: `scripts/benchmark.sh` and `tools/bench_compare.py`
 
-Not built yet: `benchmark.sh`, `debloat.sh`, `tune.sh`, `restore.sh`,
-`verify.sh`, the launcher, and the catalog tooling. Until `debloat.sh` exists,
-nothing in this repository can disable a package.
+Not built yet: `debloat.sh`, `tune.sh`, `restore.sh`, `verify.sh`, the
+launcher, and the catalog tooling. Until `debloat.sh` exists, nothing in this
+repository can disable a package.
 
 ## Safety
 
@@ -38,6 +39,7 @@ scripts/connect.sh <hu-ip>          # or --pair ... for Android 11+
 scripts/preflight.sh                # facts + the one-time snapshot
 scripts/discover.sh                 # read-only inventory -> report/discover-*.txt
 scripts/configure.sh --keep ...      # the interview -> headroom.conf
+scripts/benchmark.sh --label before --runs 5
 scripts/close-adb.sh <hu-ip>        # end the session
 ```
 

@@ -59,13 +59,14 @@ units.
 
 ## Current implementation
 
-Phases 0 to 6 are implemented:
+Phases 0 to 7 are implemented:
 
 ```sh
 scripts/connect.sh <hu-ip>
 scripts/preflight.sh
 scripts/discover.sh
 scripts/configure.sh ...
+scripts/benchmark.sh --label before --runs 5
 scripts/close-adb.sh <hu-ip>
 ```
 
@@ -77,7 +78,8 @@ it never disables anything. `configure.sh` writes only `headroom.conf` (mode
 network: the IP comes from the person.
 
 The destructive scripts do not exist yet. Do not improvise them. The next
-phases are `benchmark.sh`, then `debloat.sh` one tier at a time.
+phase is `verify.sh`, then `debloat.sh` one tier at a time; `verify.sh` must
+exist before the first field batch.
 
 ## Order of operations (once the full tool exists)
 
