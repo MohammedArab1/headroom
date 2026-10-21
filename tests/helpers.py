@@ -67,6 +67,8 @@ class Run:
             SETTLE="0",
             HOME_WAIT="0",
             COLD_SLEEP="0",
+            PRIVATE_DNS_WAIT="0",
+            PRIVATE_DNS_STEP="1",
             FAKE_ADB_STATE=str(self.state_file),
             FAKE_ADB_LOG=str(self.log),
             PROFILE=self.profile,

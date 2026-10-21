@@ -292,7 +292,15 @@ if cmd.startswith("ping -c 1 -W 3 "):
     )
 m = re.fullmatch(r"cmd appops get (\S+) (\S+)", cmd)
 if m:
-    reply(S.get("appops", {}).get(f"{m.group(1)} {m.group(2)}", "ignore"))
+    op = m.group(2)
+    mode = S.get("appops", {}).get(f"{m.group(1)} {op}", "default")
+    reply(f"{op}: {mode}")
+if cmd == "pm trim-caches 999G":
+    reply("Success")
+if cmd == "cmd package bg-dexopt-job":
+    reply("Success")
+if cmd.startswith("cmd package compile -m speed -f "):
+    reply("Success")
 if cmd == "ip route":
     reply(
         S.get(

@@ -21,9 +21,10 @@ Implemented and covered by offline tests:
 - Phase 8: `scripts/debloat.sh` (one tier, one recorded batch)
 - Phase 10: `scripts/restore.sh` and `scripts/bisect.sh`
 - Phase 11: `scripts/verify.sh` (automatic checks, manual gate, ignition test)
+- Phase 9: `scripts/tune.sh` (recorded settings, background restriction, cache trim,
+  Private DNS self-test, ahead-of-time compile)
 
-Not built yet: `tune.sh`, the launcher, `drift.sh`, `all.sh`, and the catalog
-tooling.
+Not built yet: the launcher, `drift.sh`, `all.sh`, and the catalog tooling.
 
 ## Safety
 

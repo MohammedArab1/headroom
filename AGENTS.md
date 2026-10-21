@@ -59,7 +59,7 @@ units.
 
 ## Current implementation
 
-Phases 0 to 8, 10 and 11 are implemented:
+Phases 0 to 11 are implemented:
 
 ```sh
 scripts/connect.sh <hu-ip>
@@ -72,6 +72,7 @@ scripts/debloat.sh --tier 1 --dry-run
 scripts/debloat.sh --tier 1 -y
 scripts/restore.sh --last
 scripts/bisect.sh --batch <id> --answers "y n ..."
+scripts/tune.sh -y
 scripts/close-adb.sh <hu-ip>
 ```
 
@@ -86,8 +87,11 @@ network: the IP comes from the person.
 snapshot, a non-empty verified profile, and every earlier batch checked. It
 writes the undo plan before the first disable, never uninstalls, and reboots.
 `restore.sh` replays those plans, restores tweaks in reverse and puts HOME back.
-`bisect.sh` narrows a bad batch to one package with a person's answers. The next
-phase is `tune.sh`.
+`bisect.sh` narrows a bad batch to one package with a person's answers.
+`tune.sh` records every value it changes before the first change, refuses to
+background-restrict kept, docked or guarded apps, self-tests Private DNS and
+reverts both keys if the resolver does not answer. The next phase is the
+launcher (Phase 12).
 
 ## Order of operations (once the full tool exists)
 
