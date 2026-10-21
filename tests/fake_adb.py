@@ -188,6 +188,12 @@ if cmd.startswith("cmd package resolve-activity --brief") and "category.HOME" in
     reply("priority=0 preferredOrder=0 match=0x108000\n" + S["home"])
 if cmd.startswith("cmd package query-activities --brief") and "category.HOME" in cmd:
     reply("\n".join("  " + c for c in S.get("home_claims", [S["home"]])))
+if (
+    cmd.startswith("cmd package query-activities --brief")
+    and "category.LAUNCHER" in cmd
+):
+    pkg = cmd.split()[-1]
+    reply("\n".join("  " + c for c in S.get("launchers", {}).get(pkg, [])))
 if cmd == "dumpsys device_policy":
     reply(S.get("device_policy", ""))
 if cmd == "ip route":

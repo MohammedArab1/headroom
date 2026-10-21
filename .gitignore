@@ -1,5 +1,7 @@
 # Household and device data never leaves this machine
 headroom.conf
+# Local planning document: never commit it.
+headroom-plan.md
 report/*
 !report/.keep
 *.log

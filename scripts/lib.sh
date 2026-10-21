@@ -10,7 +10,7 @@ DRY_RUN=${DRY_RUN:-0}
 ASSUME_YES=${ASSUME_YES:-0}
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 DATA=${HEADROOM_DATA:-$ROOT/data}     # tests point this at tests/fixtures
-REPORT="$ROOT/report"
+REPORT=${HEADROOM_REPORT:-$ROOT/report}
 CONF=${CONF:-$ROOT/headroom.conf}
 STATE_ROOT=${HEADROOM_STATE:-$HOME/.headroom}
 SERIAL=${SERIAL:-${ADB_SERIAL:-}}
@@ -194,8 +194,8 @@ EOF
 # Why a package must not be disabled, one reason per line; no output = no known risk.
 # "hard:" reasons can never be overridden. "risk:" reasons can, via ALLOW_RISKY in headroom.conf,
 # after a person read `dumpsys package <pkg>` and agreed (AGENTS.md, "Overriding a guard").
-risk_reasons() {
-  local p=$1 lp d uid perm perms re
+risk_reasons_with_dump() {
+  local p=$1 d=$2 lp uid perm perms re
   lp=$(lower "$p")
   is_never "$p"           && echo "hard: never-disable list"
   [[ $p == "$SELF_PKG" ]] && echo "hard: headroom's own launcher"
@@ -206,7 +206,6 @@ risk_reasons() {
   fi
   printf '%s\n' "$POLICY" | grep -F "$p/" >/dev/null && echo "hard: named in device policy (device admin)"
   case ":$A11Y:" in *":$p/"*) echo "risk: enabled accessibility service" ;; esac
-  d=$(dev "dumpsys package $p")
   uid=$(printf '%s\n' "$d" | sed -n 's/.*userId=\([0-9][0-9]*\).*/\1/p' | head -n 1)
   [[ -n $uid && $uid -lt 10000 ]] && echo "risk: shared core uid $uid (system, phone, bluetooth...)"
   printf '%s\n' "$d" | grep -E 'pkgFlags=\[[^]]*PERSISTENT' >/dev/null && echo "risk: persistent (always running)"
@@ -220,6 +219,12 @@ risk_reasons() {
 $SENSITIVE_RE
 EOF
   return 0
+}
+
+risk_reasons() {
+  local d
+  d=$(dev "dumpsys package $1")
+  risk_reasons_with_dump "$1" "$d"
 }
 
 # The reasons left after ALLOW_RISKY: what actually blocks a package.

@@ -68,6 +68,7 @@ class Run:
             FAKE_ADB_LOG=str(self.log),
             PROFILE=self.profile,
             HEADROOM_DATA=str(self.data),
+            HEADROOM_REPORT=str(Path(self.tmp.name) / "report"),
         )
         if not self.preset_serial:
             env.pop("SERIAL")

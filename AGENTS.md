@@ -59,21 +59,24 @@ units.
 
 ## Current implementation
 
-Phases 0 to 3 are implemented:
+Phases 0 to 4 are implemented:
 
 ```sh
 scripts/connect.sh <hu-ip>
 scripts/preflight.sh
+scripts/discover.sh
 scripts/close-adb.sh <hu-ip>
 ```
 
 `preflight.sh` is read-only. It writes the first snapshot, which is the record
-undo will depend on, and never overwrites an existing one. `connect.sh` never
-scans the network: the IP comes from the person.
+undo will depend on, and never overwrites an existing one. `discover.sh` is
+read-only: it writes `report/discover-<date>.txt` and suggests a profile, but
+it never disables anything. `connect.sh` never scans the network: the IP comes
+from the person.
 
 The destructive scripts do not exist yet. Do not improvise them. The next
-phases are `discover.sh` and `configure.sh`, then `benchmark.sh`, then
-`debloat.sh` one tier at a time.
+phases are `configure.sh` and `benchmark.sh`, then `debloat.sh` one tier at a
+time.
 
 ## Order of operations (once the full tool exists)
 
@@ -99,14 +102,14 @@ scripts/close-adb.sh <hu-ip>                    # always, last
 
 ## Reading the output
 
-| Word in output | Meaning |
-|---|---|
-| `disabled` | `pm disable-user` succeeded |
-| `refused` | the firmware refused (protected package). Expected for some vendor packages: add them to the profile's `README.md` |
-| `suspect: <text>` | unexpected output. Stop and have a person read it |
-| `SKIP (...)` | intentionally not touched, with the reason |
-| `GUARD` | a safety guard blocked it. The reasons are listed underneath |
-| `absent` | not installed on this unit |
+| Word in output    | Meaning                                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `disabled`        | `pm disable-user` succeeded                                                                                        |
+| `refused`         | the firmware refused (protected package). Expected for some vendor packages: add them to the profile's `README.md` |
+| `suspect: <text>` | unexpected output. Stop and have a person read it                                                                  |
+| `SKIP (...)`      | intentionally not touched, with the reason                                                                         |
+| `GUARD`           | a safety guard blocked it. The reasons are listed underneath                                                       |
+| `absent`          | not installed on this unit                                                                                         |
 
 Exit codes: 0 did what was asked; 1 a check failed or the person said no;
 2 usage error or the unit could not be read.
@@ -120,19 +123,19 @@ agree, write the evidence into the profile's `packages.txt` comment, then run
 
 ## Recovery
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| A car check fails after a batch | something in that batch was load-bearing | `scripts/restore.sh --last`, check again, then `scripts/bisect.sh` |
-| Black screen or no home after boot | HOME lost its target | `launcher/install.sh --undo`, or `scripts/stock-launcher.sh --enable --make-home` |
-| HOME lands on a setup wizard or FallbackHome | vendor launcher disabled, another claimant took HOME | `scripts/stock-launcher.sh --enable --make-home` |
-| ADB lost after reboot | Wireless debugging changed port | `scripts/connect.sh` again (pairing persists) |
-| Keyboard missing | the IME package is disabled | `scripts/restore.sh --package <ime>`; `verify.sh` names it |
-| No internet after `tune.sh` | Private DNS resolver unreachable | `scripts/restore.sh --all --no-home` |
-| Unit does not sleep with ignition off | a power/ACC package is disabled | `scripts/restore.sh --last`; fix before driving off |
-| Everything is back after a firmware update | the update re-enabled packages | `scripts/drift.sh`, then `scripts/drift.sh --fix` |
-| ADB will not come back and a car function is broken | ADB off after the reboot | on the unit: Settings > Apps (show system apps) > enable each app in `report/manual-undo-<batch>.txt`, then reboot |
-| HOME is wrong and no laptop is at hand | launcher handover | on the unit: Settings > Apps > headroom home > Open by default > Clear defaults (or Disable) |
-| Start over | | `scripts/restore.sh --all` |
+| Symptom                                             | Likely cause                                         | Fix                                                                                                                |
+| --------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| A car check fails after a batch                     | something in that batch was load-bearing             | `scripts/restore.sh --last`, check again, then `scripts/bisect.sh`                                                 |
+| Black screen or no home after boot                  | HOME lost its target                                 | `launcher/install.sh --undo`, or `scripts/stock-launcher.sh --enable --make-home`                                  |
+| HOME lands on a setup wizard or FallbackHome        | vendor launcher disabled, another claimant took HOME | `scripts/stock-launcher.sh --enable --make-home`                                                                   |
+| ADB lost after reboot                               | Wireless debugging changed port                      | `scripts/connect.sh` again (pairing persists)                                                                      |
+| Keyboard missing                                    | the IME package is disabled                          | `scripts/restore.sh --package <ime>`; `verify.sh` names it                                                         |
+| No internet after `tune.sh`                         | Private DNS resolver unreachable                     | `scripts/restore.sh --all --no-home`                                                                               |
+| Unit does not sleep with ignition off               | a power/ACC package is disabled                      | `scripts/restore.sh --last`; fix before driving off                                                                |
+| Everything is back after a firmware update          | the update re-enabled packages                       | `scripts/drift.sh`, then `scripts/drift.sh --fix`                                                                  |
+| ADB will not come back and a car function is broken | ADB off after the reboot                             | on the unit: Settings > Apps (show system apps) > enable each app in `report/manual-undo-<batch>.txt`, then reboot |
+| HOME is wrong and no laptop is at hand              | launcher handover                                    | on the unit: Settings > Apps > headroom home > Open by default > Clear defaults (or Disable)                       |
+| Start over                                          |                                                      | `scripts/restore.sh --all`                                                                                         |
 
 ## Reporting
 
