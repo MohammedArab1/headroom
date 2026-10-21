@@ -59,7 +59,7 @@ units.
 
 ## Current implementation
 
-Phases 0 to 8 and 11 are implemented:
+Phases 0 to 8, 10 and 11 are implemented:
 
 ```sh
 scripts/connect.sh <hu-ip>
@@ -70,6 +70,7 @@ scripts/benchmark.sh --label before --runs 5
 scripts/verify.sh
 scripts/debloat.sh --tier 1 --dry-run
 scripts/debloat.sh --tier 1 -y
+scripts/restore.sh --last
 scripts/close-adb.sh <hu-ip>
 ```
 
@@ -83,8 +84,9 @@ network: the IP comes from the person.
 `debloat.sh` is the first destructive script. It refuses to start without a
 snapshot, a non-empty verified profile, and every earlier batch checked. It
 writes the undo plan before the first disable, never uninstalls, and reboots.
-The restore and bisect scripts do not exist yet; do not improvise them. The
-next phase is `restore.sh`, then `bisect.sh`.
+`restore.sh` replays those plans, restores tweaks in reverse and puts HOME back.
+`bisect.sh` does not exist yet; do not improvise it. The next phase is
+`bisect.sh`, then `tune.sh`.
 
 ## Order of operations (once the full tool exists)
 

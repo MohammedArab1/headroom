@@ -19,10 +19,11 @@ Implemented and covered by offline tests:
 - Phase 6: `scripts/configure.sh` (the interview and `headroom.conf`)
 - Phase 7: `scripts/benchmark.sh` and `tools/bench_compare.py`
 - Phase 8: `scripts/debloat.sh` (one tier, one recorded batch)
+- Phase 10: `scripts/restore.sh` (batch replay, tweaks, HOME, snapshot fallback)
 - Phase 11: `scripts/verify.sh` (automatic checks, manual gate, ignition test)
 
-Not built yet: `tune.sh`, `restore.sh`, `bisect.sh`, the launcher,
-`drift.sh`, `all.sh`, and the catalog tooling.
+Not built yet: `bisect.sh`, `tune.sh`, the launcher, `drift.sh`, `all.sh`,
+and the catalog tooling.
 
 ## Safety
 

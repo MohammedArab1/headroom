@@ -66,7 +66,9 @@ class DebloatTest(unittest.TestCase):
         return r, r("debloat.sh", *args)
 
     def shell_calls(self, r):
-        return [c[3] for c in r.calls() if c[:3] == ["-s", "test-hu", "shell"]]
+        return [
+            " ".join(c[3:]) for c in r.calls() if c[:3] == ["-s", "test-hu", "shell"]
+        ]
 
     def test_dry_run_changes_nothing(self):
         r, p = self.debloat("--tier", "1", "--dry-run")

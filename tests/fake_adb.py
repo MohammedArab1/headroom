@@ -175,9 +175,21 @@ if m:
     reply(f"Package {p} new state: disabled-user")
 m = re.fullmatch(r"pm enable --user 0 (\S+)", cmd)
 if m:
+    if m.group(1) in S.get("enable_reply", {}):
+        reply(S["enable_reply"][m.group(1)])
     S["disabled"] = [d for d in S["disabled"] if d != m.group(1)]
     save()
     reply(f"Package {m.group(1)} new state: enabled")
+m = re.fullmatch(r"settings delete (\w+) (\S+)", cmd)
+if m:
+    S.setdefault("settings", {}).pop(f"{m.group(1)} {m.group(2)}", None)
+    save()
+    reply()
+m = re.fullmatch(r"cmd appops set (\S+) (\S+) (\S+)", cmd)
+if m:
+    S.setdefault("appops", {})[f"{m.group(1)} {m.group(2)}"] = m.group(3)
+    save()
+    reply()
 m = re.fullmatch(r"dumpsys package (\S+)", cmd)
 if m:
     default = (
@@ -196,6 +208,10 @@ if m:
     reply()
 if cmd.startswith("cmd package resolve-activity --brief") and "category.HOME" in cmd:
     reply("priority=0 preferredOrder=0 match=0x108000\n" + S["home"])
+if cmd.startswith("cmd package set-home-activity --user 0 "):
+    S["home"] = cmd[len("cmd package set-home-activity --user 0 ") :]
+    save()
+    reply("Success")
 if (
     cmd.startswith("cmd package resolve-activity --brief")
     and "category.LAUNCHER" in cmd
@@ -234,6 +250,10 @@ if cmd == "am start -W -a android.intent.action.MAIN -c android.intent.category.
     reply(
         "Starting: Intent { act=android.intent.action.MAIN "
         f"cat=[android.intent.category.HOME] }}\nStatus: ok\nTotalTime: {val}\n"
+    )
+if cmd == "am start -a android.intent.action.MAIN -c android.intent.category.HOME":
+    reply(
+        "Starting: Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] }\n"
     )
 if cmd.startswith("am start -W -n "):
     component = cmd[len("am start -W -n ") :]
