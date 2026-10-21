@@ -28,8 +28,10 @@ Implemented and covered by offline tests:
   machine yet)
 - Phase 13: `launcher/install.sh`, `scripts/launcher.sh` and
   `scripts/stock-launcher.sh` (handover, 2-boot soak gate, rollback)
+- Phase 14: `scripts/drift.sh` (what a firmware update undid, with `--fix`
+  through fresh guards)
 
-Not built yet: `drift.sh`, `all.sh`, and the catalog tooling.
+Not built yet: `all.sh`, the catalog tooling, the remaining user docs, and CI.
 
 ## Safety
 

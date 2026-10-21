@@ -59,7 +59,7 @@ units.
 
 ## Current implementation
 
-Phases 0 to 13 are implemented (the launcher is written but has not been built
+Phases 0 to 14 are implemented (the launcher is written but has not been built
 here: this machine had no JDK or Android SDK):
 
 ```sh
@@ -76,6 +76,8 @@ scripts/bisect.sh --batch <id> --answers "y n ..."
 scripts/tune.sh -y
 scripts/launcher.sh -y
 scripts/stock-launcher.sh --disable          # optional, after the 2-boot soak
+scripts/verify.sh                            # after a firmware update: drift.sh
+scripts/drift.sh
 scripts/close-adb.sh <hu-ip>
 ```
 
@@ -109,7 +111,10 @@ starts the launcher **before** touching HOME, and rolls back with
 ignores `set-home-activity`. `scripts/stock-launcher.sh` disables the vendor
 launcher only after a 2-boot soak, applies every non-HOME guard (with
 `IGNORE_HOME_GUARD` for the HOME ones), and re-enables it if HOME does not stay.
-The next phase is `drift.sh` (Phase 14).
+`drift.sh` reports packages that came back, HOME, tweaks, new preloads and a
+changed build; `--fix` re-applies the packages through fresh guards, re-applies
+the recorded tweaks with the Private DNS self-test, and re-takes HOME with the
+install rollback logic. The next phase is `all.sh` (Phase 15).
 
 ## Order of operations (once the full tool exists)
 
