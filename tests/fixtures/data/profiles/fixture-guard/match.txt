@@ -1,0 +1,2 @@
+prop ro.product.model=Guard Unit
+prop ro.build.version.sdk=33

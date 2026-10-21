@@ -59,7 +59,7 @@ units.
 
 ## Current implementation
 
-Phases 0 to 7 and 11 are implemented:
+Phases 0 to 8 and 11 are implemented:
 
 ```sh
 scripts/connect.sh <hu-ip>
@@ -68,6 +68,8 @@ scripts/discover.sh
 scripts/configure.sh ...
 scripts/benchmark.sh --label before --runs 5
 scripts/verify.sh
+scripts/debloat.sh --tier 1 --dry-run
+scripts/debloat.sh --tier 1 -y
 scripts/close-adb.sh <hu-ip>
 ```
 
@@ -78,9 +80,11 @@ it never disables anything. `configure.sh` writes only `headroom.conf` (mode
 600, git-ignored); it never changes the unit. `connect.sh` never scans the
 network: the IP comes from the person.
 
-The destructive scripts do not exist yet. Do not improvise them. `verify.sh`
-now exists, so the car-check gate and its `.checked` markers are in place. The
-next phase is `debloat.sh`, one tier at a time.
+`debloat.sh` is the first destructive script. It refuses to start without a
+snapshot, a non-empty verified profile, and every earlier batch checked. It
+writes the undo plan before the first disable, never uninstalls, and reboots.
+The restore and bisect scripts do not exist yet; do not improvise them. The
+next phase is `restore.sh`, then `bisect.sh`.
 
 ## Order of operations (once the full tool exists)
 

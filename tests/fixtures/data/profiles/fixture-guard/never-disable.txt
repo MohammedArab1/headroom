@@ -1,0 +1,1 @@
+# Guard profile: no unit-specific never-disable entries beyond the common lists.

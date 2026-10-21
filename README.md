@@ -18,11 +18,11 @@ Implemented and covered by offline tests:
 - Phase 5 data files: `data/common/`, the generic profile, and the fixture profile
 - Phase 6: `scripts/configure.sh` (the interview and `headroom.conf`)
 - Phase 7: `scripts/benchmark.sh` and `tools/bench_compare.py`
+- Phase 8: `scripts/debloat.sh` (one tier, one recorded batch)
 - Phase 11: `scripts/verify.sh` (automatic checks, manual gate, ignition test)
 
-Not built yet: `debloat.sh`, `tune.sh`, `restore.sh`, `bisect.sh`, the
-launcher, `drift.sh`, `all.sh`, and the catalog tooling. Until `debloat.sh`
-exists, nothing in this repository can disable a package.
+Not built yet: `tune.sh`, `restore.sh`, `bisect.sh`, the launcher,
+`drift.sh`, `all.sh`, and the catalog tooling.
 
 ## Safety
 
@@ -42,6 +42,9 @@ scripts/discover.sh                 # read-only inventory -> report/discover-*.t
 scripts/configure.sh --keep ...      # the interview -> headroom.conf
 scripts/benchmark.sh --label before --runs 5
 scripts/verify.sh                   # automatic health checks
+scripts/debloat.sh --tier 1 --dry-run
+scripts/debloat.sh --tier 1 -y      # only after the person agrees
+scripts/verify.sh --manual          # a person answers the car checks
 scripts/close-adb.sh <hu-ip>        # end the session
 ```
 

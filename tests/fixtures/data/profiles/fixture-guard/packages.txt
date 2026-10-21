@@ -1,0 +1,4 @@
+# Guard Fixture Unit, build TEST.GUARD
+com.vendor.launcher           1   # fixture: owns HOME, so the hard guard must block it
+com.vendor.persistent         1   # fixture: dumpsys says PERSISTENT
+com.vendor.weird              2   # fixture: returns unexpected output when disabled
