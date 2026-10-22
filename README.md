@@ -24,8 +24,10 @@ Implemented and covered by offline tests:
 - Phase 10: `scripts/restore.sh` and `scripts/bisect.sh`
 - Phase 11: `scripts/verify.sh` (automatic checks, manual gate, ignition test)
 - Phase 12: the `launcher/` app (headroom home) — built, unit-tested and
-  linted in Docker: 24 KB release APK, zero permissions, no lint issues;
-  emulator and real-unit checks still pending
+  linted in Docker (24 KB release APK, zero permissions, no lint issues) and
+  checked on four emulator sizes: the whole dock stays on screen, HOME presses
+  do not re-scan, and disabling a docked app updates the dock; real-unit checks
+  still pending
 - Phase 13: `launcher/install.sh`, `scripts/launcher.sh` and
   `scripts/stock-launcher.sh` (handover, 2-boot soak gate, rollback)
 - Phase 14: `scripts/drift.sh` (what a firmware update undid, with `--fix`
@@ -41,7 +43,8 @@ Implemented and covered by offline tests:
 All 18 phases are implemented. The launcher was built and linted in Docker
 (`launcher/docker-build.sh`): unit tests and `lintRelease` pass, the release APK
 is 24 KB with zero permissions, no background components and no runtime
-dependencies. The emulator checks and everything that needs a car still remain:
+dependencies. The four emulator checks in the plan pass (1024×600, 1280×720,
+1920×720 and 720×1280 portrait). Everything that needs a car still remains:
 nothing has been tested on a real head unit yet.
 
 ## What it changes
@@ -127,7 +130,9 @@ It is honest about what it does not cover:
 
 `headroom home` is a small home screen: clock, date, up to six dock apps, an app
 grid and options. The release build is 24 KB with zero permissions and no lint
-issues. Its acceptance budget:
+issues. On an emulator it holds at 1024×600, 1280×720, 1920×720 and 720×1280
+portrait (where the dock wraps to two rows), with the whole dock including
+All apps on screen. Its acceptance budget:
 
 | Property                | Target                             |
 | ----------------------- | ---------------------------------- |
@@ -172,9 +177,9 @@ Or run the whole build in Docker, with no local SDK:
 launcher/docker-build.sh
 ```
 
-Docker on macOS cannot run a hardware-accelerated Android emulator, so the
-visual/emulator checks still need a real device, a head unit, or a local SDK
-emulator.
+Docker on macOS cannot run a hardware-accelerated Android emulator (no nested
+KVM). The visual checks run against a native SDK emulator instead; see
+`launcher/README.md` and `launcher/emulator-check.sh`.
 
 ## Safety
 

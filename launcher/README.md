@@ -36,11 +36,46 @@ It builds a `linux/amd64` image with JDK 17 and the SDK, runs the unit tests,
 lint and release build, then `check-budgets.sh`. The image is x86_64 because the
 SDK build-tools are; Docker Desktop emulates it on Apple Silicon (the first run
 is slow and downloads the SDK). The APK is written to
-`launcher/app/build/outputs/apk/release/app-release.apk` on the host.
+`launcher/app/build/outputs/apk/release/app-release.apk` on the host. The debug
+signing key lives in the `headroom-android` volume, so rebuilding does not
+change the app signature (Android refuses an update signed with another key).
 
 Docker on macOS cannot run a hardware-accelerated Android emulator (no nested
-KVM). The emulator checks in the plan still need a real device, a head unit, or
-a machine with the SDK emulator installed.
+KVM); use the native SDK below for the visual checks.
+
+## Emulator checks
+
+Install the SDK natively (arm64 on Apple Silicon) with one system image:
+
+```sh
+SDK=$HOME/Library/Android/sdk
+brew install openjdk@17
+"$SDK/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "emulator" \
+  "platforms;android-34" "build-tools;34.0.0" \
+  "system-images;android-33;google_apis;arm64-v8a"
+```
+
+Build the APK, then:
+
+```sh
+launcher/emulator-check.sh                       # all four sizes
+launcher/emulator-check.sh --only hr-1024x600 --behavior
+launcher/emulator-check.sh --apk path/to/app-release.apk
+```
+
+The script creates the AVDs when they are missing, rewrites each `config.ini`
+to the plan's size, density and orientation (1024×600 mdpi, 1280×720 hdpi,
+1920×720 xhdpi, 720×1280 hdpi portrait), boots headless, installs the APK,
+starts the launcher and only then takes HOME. It writes one screenshot per AVD
+to `report/emulator/` (git-ignored). `--behavior` restarts the app, presses
+HOME ten times and fails if the package list was reloaded; then it disables a
+docked app, screenshots the dock without it, re-enables it, and screenshots it
+back. The reload line is silent unless the script sets `log.tag.headroom` to
+`DEBUG`.
+
+The dock in the screenshots comes from `launcher/headroom.local.properties`, so
+write it before building (as `install.sh` does) for a full dock. The bottom
+strip in the 1024×600 shot is Android's tablet taskbar, not the launcher.
 
 The release APK lands at `app/build/outputs/apk/release/app-release.apk`.
 Signed with the debug key on purpose: it is sideloaded over ADB, never

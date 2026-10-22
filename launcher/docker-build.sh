@@ -16,5 +16,6 @@ docker build --platform "$PLATFORM" -t "$IMAGE" -f "$HERE/Dockerfile" "$HERE" ||
 
 docker run --rm --platform "$PLATFORM" \
   -v "$ROOT:/work" -v headroom-gradle:/root/.gradle \
+  -v headroom-android:/root/.android \
   -w /work/launcher "$IMAGE" \
   bash -lc './gradlew --no-daemon testReleaseUnitTest lintRelease assembleRelease && ./check-budgets.sh'

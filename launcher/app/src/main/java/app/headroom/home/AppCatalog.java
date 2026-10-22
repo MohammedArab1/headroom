@@ -14,8 +14,8 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.util.LruCache;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -26,6 +26,9 @@ import java.util.concurrent.Executors;
 
 /** The launchable activities, refreshed only when the package list actually changes. */
 public final class AppCatalog {
+
+    private static final String TAG = "headroom";
+
     public interface Listener {
         void onAppsChanged();
     }
@@ -44,7 +47,8 @@ public final class AppCatalog {
     }
 
     private final BroadcastReceiver changes = new BroadcastReceiver() {
-        @Override public void onReceive(Context c, Intent i) {
+        @Override
+        public void onReceive(Context c, Intent i) {
             reload();
         }
     };
@@ -54,7 +58,8 @@ public final class AppCatalog {
         app = c.getApplicationContext();
         int maxKb = (int) (Runtime.getRuntime().maxMemory() / 1024 / 16); // 1/16 of the heap
         icons = new LruCache<String, Bitmap>(maxKb) {
-            @Override protected int sizeOf(String key, Bitmap bitmap) {
+            @Override
+            protected int sizeOf(String key, Bitmap bitmap) {
                 return Math.max(1, bitmap.getByteCount() / 1024);
             }
         };
@@ -66,7 +71,11 @@ public final class AppCatalog {
         filter.addAction(Intent.ACTION_PACKAGE_CHANGED); // fires when debloat disables/enables an app
         filter.addDataScheme("package");
         if (Build.VERSION.SDK_INT >= 33) {
-            app.registerReceiver(changes, filter, Context.RECEIVER_NOT_EXPORTED);
+            app.registerReceiver(
+                changes,
+                filter,
+                Context.RECEIVER_NOT_EXPORTED
+            );
         } else {
             app.registerReceiver(changes, filter); // protected system broadcasts only
         }
@@ -83,18 +92,28 @@ public final class AppCatalog {
     }
 
     public void reload() {
+        // Silent unless someone runs: adb shell setprop log.tag.headroom DEBUG
+        if (Log.isLoggable(TAG, Log.DEBUG)) Log.d(TAG, "catalog reload");
         io.execute(() -> {
             PackageManager pm = app.getPackageManager();
-            Intent intent = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
+            Intent intent = new Intent(Intent.ACTION_MAIN).addCategory(
+                Intent.CATEGORY_LAUNCHER
+            );
             List<App> list = new ArrayList<>();
             for (ResolveInfo info : pm.queryIntentActivities(intent, 0)) {
-                list.add(new App(info.activityInfo.packageName, info.activityInfo.name,
-                        String.valueOf(info.loadLabel(pm))));
+                list.add(
+                    new App(
+                        info.activityInfo.packageName,
+                        info.activityInfo.name,
+                        String.valueOf(info.loadLabel(pm))
+                    )
+                );
             }
             main.post(() -> {
                 apps = list;
                 icons.evictAll();
-                for (Listener listener : new ArrayList<>(listeners)) listener.onAppsChanged();
+                for (Listener listener : new ArrayList<>(listeners))
+                    listener.onAppsChanged();
             });
         });
     }
@@ -119,9 +138,14 @@ public final class AppCatalog {
         Bitmap cached = icons.get(key);
         if (cached != null) return cached;
         try {
-            Drawable drawable = app.getPackageManager()
-                    .getActivityIcon(new ComponentName(a.pkg, a.activity));
-            Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+            Drawable drawable = app
+                .getPackageManager()
+                .getActivityIcon(new ComponentName(a.pkg, a.activity));
+            Bitmap bitmap = Bitmap.createBitmap(
+                size,
+                size,
+                Bitmap.Config.ARGB_8888
+            );
             Canvas canvas = new Canvas(bitmap);
             drawable.setBounds(0, 0, size, size);
             drawable.draw(canvas);

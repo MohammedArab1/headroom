@@ -150,8 +150,11 @@ permissions, no background components, no runtime dependencies and the SDK
 floor. To build it, follow `launcher/README.md`; the Gradle 8.9 wrapper is
 committed. `launcher/docker-build.sh` built and linted it without a local SDK:
 all JUnit tests and `lintRelease` pass, and the release APK is 24 KB with zero
-permissions. The emulator checks in the plan still need a device or a machine
-with the SDK emulator installed.
+permissions. `launcher/emulator-check.sh` then booted the four plan resolutions
+on a local SDK emulator: the whole dock including All apps is on screen in
+each, ten HOME presses cause no re-scan, and disabling a docked app removes it
+from the dock until it is enabled again. It still needs a real car before the
+phase is done.
 
 Phase 13 is the handover: `launcher/install.sh` (also reachable as
 `scripts/launcher.sh`) builds or takes `--apk`, pushes and runs `pm install -r`,

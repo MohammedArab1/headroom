@@ -15,7 +15,9 @@ import android.view.View;
 
 /** One dock or grid tile: icon above, label below, a highlight when pressed or focused. */
 public final class TileView extends View {
+
     private static final float LABEL_SP = 18f;
+    private static final float LABEL_MIN_SP = 12f;
 
     private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final TextPaint labelPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -23,6 +25,8 @@ public final class TileView extends View {
     private final RectF highlightRect = new RectF();
     private final float radius;
     private final float padding;
+    private final float labelSize;
+    private final float labelMinSize;
     private final int highlightColor;
 
     private Bitmap icon;
@@ -34,12 +38,31 @@ public final class TileView extends View {
         float density = getResources().getDisplayMetrics().density;
         radius = 12 * density;
         padding = 8 * density;
-        int accent = getResources().getColor(R.color.accent, context.getTheme());
-        highlightColor = Color.argb(70, Color.red(accent), Color.green(accent), Color.blue(accent));
-        labelPaint.setColor(getResources().getColor(R.color.text, context.getTheme()));
+        int accent = getResources().getColor(
+            R.color.accent,
+            context.getTheme()
+        );
+        highlightColor = Color.argb(
+            70,
+            Color.red(accent),
+            Color.green(accent),
+            Color.blue(accent)
+        );
+        labelPaint.setColor(
+            getResources().getColor(R.color.text, context.getTheme())
+        );
         labelPaint.setTextAlign(Paint.Align.CENTER);
-        labelPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, LABEL_SP,
-                getResources().getDisplayMetrics()));
+        labelSize = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP,
+            LABEL_SP,
+            getResources().getDisplayMetrics()
+        );
+        labelMinSize = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP,
+            LABEL_MIN_SP,
+            getResources().getDisplayMetrics()
+        );
+        labelPaint.setTextSize(labelSize);
         int minimum = Math.round(GridMath.MIN_TOUCH_DP * density);
         setMinimumWidth(minimum);
         setMinimumHeight(minimum);
@@ -66,7 +89,8 @@ public final class TileView extends View {
         invalidate();
     }
 
-    @Override protected void onMeasure(int widthSpec, int heightSpec) {
+    @Override
+    protected void onMeasure(int widthSpec, int heightSpec) {
         int width = MeasureSpec.getSize(widthSpec);
         int height = MeasureSpec.getSize(heightSpec);
         int widthMode = MeasureSpec.getMode(widthSpec);
@@ -75,19 +99,31 @@ public final class TileView extends View {
         int minHeight = getSuggestedMinimumHeight();
 
         if (widthMode == MeasureSpec.UNSPECIFIED) width = minWidth;
-        if (heightMode == MeasureSpec.UNSPECIFIED) height = Math.max(width, minHeight);
+        if (heightMode == MeasureSpec.UNSPECIFIED) height = Math.max(
+            width,
+            minHeight
+        );
         width = Math.max(width, minWidth);
         height = Math.max(height, minHeight);
         if (heightMode == MeasureSpec.AT_MOST) height = Math.min(height, width);
-        setMeasuredDimension(resolveSize(width, widthSpec), resolveSize(height, heightSpec));
+        setMeasuredDimension(
+            resolveSize(width, widthSpec),
+            resolveSize(height, heightSpec)
+        );
     }
 
-    @Override protected void onDraw(Canvas canvas) {
+    @Override
+    protected void onDraw(Canvas canvas) {
         int width = getWidth();
         int height = getHeight();
         if (isPressed() || isFocused()) {
             fill.setColor(highlightColor);
-            highlightRect.set(padding / 2, padding / 2, width - padding / 2, height - padding / 2);
+            highlightRect.set(
+                padding / 2,
+                padding / 2,
+                width - padding / 2,
+                height - padding / 2
+            );
             canvas.drawRoundRect(highlightRect, radius, radius, fill);
         }
 
@@ -105,15 +141,29 @@ public final class TileView extends View {
 
         if (!label.isEmpty()) {
             float available = Math.max(0, width - 2 * padding);
-            CharSequence shown = TextUtils.ellipsize(label, labelPaint, available,
-                    TextUtils.TruncateAt.END);
-            float baseline = iconArea + (height - iconArea) / 2f
-                    - (labelPaint.ascent() + labelPaint.descent()) / 2f;
+            labelPaint.setTextSize(labelSize);
+            float measured = labelPaint.measureText(label);
+            if (measured > available) {
+                labelPaint.setTextSize(
+                    Math.max(labelMinSize, (labelSize * available) / measured)
+                );
+            }
+            CharSequence shown = TextUtils.ellipsize(
+                label,
+                labelPaint,
+                available,
+                TextUtils.TruncateAt.END
+            );
+            float baseline =
+                iconArea +
+                (height - iconArea) / 2f -
+                (labelPaint.ascent() + labelPaint.descent()) / 2f;
             canvas.drawText(shown.toString(), width / 2f, baseline, labelPaint);
         }
     }
 
-    @Override protected void drawableStateChanged() {
+    @Override
+    protected void drawableStateChanged() {
         super.drawableStateChanged();
         invalidate();
     }
