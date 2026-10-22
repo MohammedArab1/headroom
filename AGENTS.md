@@ -170,9 +170,9 @@ the recorded tweaks with the Private DNS self-test, and re-takes HOME with the
 install rollback logic. `all.sh` runs the whole pass and stops at every gate.
 On an emulator, `install.sh` took HOME from Pixel Launcher, `stock-launcher.sh
 --disable` refused the vendor's guards until the documented `ALLOW_RISKY`
-evidence was supplied, then detected the emulator re-enabling the vendor at
-boot; `--enable --make-home` restored it. The real 2-boot soak and the car
-checks still need a unit.
+override was supplied for the test AVD, then detected the emulator re-enabling
+the vendor at boot; `--enable --make-home` restored it. The real 2-boot soak
+and the car checks still need a unit.
 Phase 16 is the catalog: `catalog/validate.py` checks schema, profiles, `tested`
 honesty and identifiers; `scripts/contribute.sh` interviews a person, refuses
 IP/MAC/VIN/e-mail/phone/coordinate-shaped answers, fills the facts the scripts
