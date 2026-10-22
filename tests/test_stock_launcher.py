@@ -92,6 +92,15 @@ class StockLauncherTest(unittest.TestCase):
         )
         self.assertLess(disable_i, home_i)
 
+    def test_disable_reports_a_vendor_re_enabled_at_boot(self):
+        r, sd = self.new_run(state={"reenable_at_boot": ["com.vendor.launcher"]})
+        p = r("stock-launcher.sh", "--disable", "-y")
+        self.assertEqual(p.returncode, 1, msg=p.stdout + p.stderr)
+        self.assertIn("came back at boot", p.stderr)
+        self.assertNotIn("com.vendor.launcher", r.state()["disabled"])
+        batch = next((sd / "batches").glob("stock-launcher-*.tsv"))
+        self.assertTrue(batch.with_suffix(".restored").exists())
+
     def test_disable_refuses_without_the_soak(self):
         r, _ = self.new_run(boots=[BOOTS[0]])
         p = r("stock-launcher.sh", "--disable", "-y")

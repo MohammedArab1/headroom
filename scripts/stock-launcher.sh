@@ -185,6 +185,13 @@ NOW_HOME=$(home_package)
 [[ $NOW_HOME == "$SELF_PKG" ]] \
   || rollback_vendor "after the reboot HOME is $NOW_HOME, not $SELF_PKG"
 
+if ! in_lines "$VENDOR_PKG" "$(disabled_set)"; then
+  : > "$STATE/batches/$BATCH.restored"
+  warn "$VENDOR_PKG came back at boot and is enabled again; HOME is still $SELF_PKG."
+  warn "record this in data/profiles/$PROFILE/README.md: this firmware will not keep it disabled."
+  exit 1
+fi
+
 if [[ $MODE == handover ]]; then
   rm -f "$STATE/set-home-ignored"
   : > "$STATE/launcher-installed"
