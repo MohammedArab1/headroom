@@ -76,7 +76,8 @@ back. The reload line is silent unless the script sets `log.tag.headroom` to
 
 `--ui` opens All apps, Options and the hidden-apps dialog, changes Dock slots
 and checks that the value survives a process restart, drives the D-pad until a
-tile is focused, and opens the long-press menu, with a screenshot of each. It
+tile is focused, opens the long-press menu, chooses Hide and checks that the
+tile leaves the dock before resetting. It takes a screenshot of each step and
 runs on the AVD selected by `--only`, or on `hr-1024x600` otherwise. The check
 waits four seconds before each screenshot: the headless compositor updates
 slower than the accessibility hierarchy.

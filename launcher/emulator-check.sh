@@ -290,7 +290,7 @@ ui_reset_options() {
 }
 
 ui_checks() {  # avd name
-  local name=$1 tiles item b
+  local name=$1 tiles item b home_tiles anchor
   echo "ui checks"
 
   # Start from the build defaults so the check is repeatable.
@@ -299,9 +299,9 @@ ui_checks() {  # avd name
   sleep 1
   ui_reset_options || { echo "FAIL: could not reset to defaults" >&2; return 1; }
   ui_key KEYCODE_BACK
-  tiles=$(ui_tiles)
-  echo "  home tiles: $tiles"
-  [[ $tiles -ge 4 ]] || { echo "FAIL: the dock did not render" >&2; return 1; }
+  home_tiles=$(ui_tiles)
+  echo "  home tiles: $home_tiles"
+  [[ $home_tiles -ge 4 ]] || { echo "FAIL: the dock did not render" >&2; return 1; }
 
   # All apps.
   ui_tap content-desc "All apps" || { echo "FAIL: could not open All apps" >&2; return 1; }
@@ -354,9 +354,12 @@ ui_checks() {  # avd name
   screenshot_settled "$OUT/$name-dpad.png" || true
   echo "  D-pad focus reached a tile"
 
-  # Long press: the menu must offer all six actions.
-  b=$(ui_bounds content-desc "Clock") || b=$(ui_bounds content-desc "Settings") \
-    || { echo "FAIL: no dock tile to long-press" >&2; return 1; }
+  # Long press: the menu must offer all six actions, and Hide must remove a dock tile.
+  anchor="Clock"
+  b=$(ui_bounds content-desc "$anchor") || {
+    anchor="Settings"
+    b=$(ui_bounds content-desc "$anchor")
+  } || { echo "FAIL: no dock tile to long-press" >&2; return 1; }
   # shellcheck disable=SC2086
   set -- $b
   "$ADB" -s "$SERIAL" shell input swipe \
@@ -368,7 +371,26 @@ ui_checks() {  # avd name
       || { echo "FAIL: long-press menu missing: $item" >&2; return 1; }
   done
   screenshot_settled "$OUT/$name-longpress.png" || true
+
+  ui_tap text "Hide" || { echo "FAIL: could not choose Hide" >&2; return 1; }
+  sleep 1
+  tiles=$(ui_tiles)
+  echo "  home tiles after Hide: $tiles"
+  [[ $tiles -eq $((home_tiles - 1)) ]] \
+    || { echo "FAIL: Hide did not remove the docked app" >&2; return 1; }
+  [[ $(ui_count content-desc "$anchor") -eq 0 ]] \
+    || { echo "FAIL: $anchor is still on the home screen" >&2; return 1; }
+  screenshot_settled "$OUT/$name-hidden-app.png" || true
+
+  # Reset clears the hidden set and puts the tile back in its old place.
+  ui_tap text "Options" \
+    || { echo "FAIL: could not open Options after Hide" >&2; return 1; }
+  sleep 1
+  ui_reset_options || { echo "FAIL: could not reset after Hide" >&2; return 1; }
   ui_key KEYCODE_BACK
+  tiles=$(ui_tiles)
+  [[ $tiles -eq $home_tiles ]] \
+    || { echo "FAIL: reset did not bring the hidden app back" >&2; return 1; }
 
   ui_home
   screenshot_settled "$OUT/$name-ui-home.png" || true
