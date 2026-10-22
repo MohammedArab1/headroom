@@ -42,9 +42,9 @@ class DiscoverTest(unittest.TestCase):
         for r in self.runs:
             r.tmp.cleanup()
 
-    def run_discover(self, *args, env=None):
+    def run_discover(self, *args, env=None, installed=None):
         state = {
-            "installed": INSTALLED,
+            "installed": INSTALLED if installed is None else installed,
             "disabled": ["com.vendor.ads"],
             "third": ["com.example.app"],
             "dumpsys": DUMPSYS,
@@ -69,6 +69,12 @@ class DiscoverTest(unittest.TestCase):
         return [
             " ".join(c[3:]) for c in r.calls() if c[:3] == ["-s", "test-hu", "shell"]
         ]
+
+    def test_framework_package_is_skipped_without_a_warning(self):
+        _, p, reports = self.run_discover(installed=INSTALLED + ["android"])
+        self.assertEqual(p.returncode, 0, msg=p.stdout + p.stderr)
+        self.assertNotIn("unexpected package name", p.stdout)
+        self.assertNotIn("\n  android ", self.report_text(reports))
 
     def test_report_has_every_section_and_category(self):
         _, p, reports = self.run_discover()

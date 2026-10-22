@@ -17,7 +17,9 @@ scripts/discover.sh --labels --screens
 level and claimed release, RAM, screen, launcher claimants and suggestions. It
 never changes the unit. `--labels` pulls each candidate APK to a temporary
 directory, reads `application-label` with `aapt2` (set `AAPT2` or
-`ANDROID_HOME`), and deletes it; APKs over 50 MB are skipped. `--screens`
+`ANDROID_HOME`), and deletes it; APKs over 50 MB are skipped. On a production
+unit the shell may not be able to read third-party APKs under `/data/app`;
+their labels are skipped and only the package name is shown. `--screens`
 captures the app drawer into `report/`, which may show personal data and is
 git-ignored.
 

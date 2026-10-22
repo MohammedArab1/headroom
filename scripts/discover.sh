@@ -125,6 +125,8 @@ N_CORE=0; N_OTHER=0; N_CAND=0
 
 while IFS= read -r p; do
   [[ -n $p ]] || continue
+  # The framework package has no dot and is not an app; pm always lists it.
+  [[ $p == android ]] && continue
   if ! [[ $p =~ $PKG_RE ]]; then
     warn "skipping an unexpected package name: $p"
     continue
