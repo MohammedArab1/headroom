@@ -57,9 +57,53 @@ units.
 16. **Close ADB at the end of a session.** If the unit shares its own hotspot
     with passengers, an open ADB port is a shell for anyone in the car.
 
+## Step 0: the interview
+
+Ask in plain language and wait for answers. Map app names to packages with
+`data/common/apps.txt` and `adb shell pm list packages -3`. **Never guess a
+package.** Record the answers with `scripts/configure.sh` (interactive) or
+`scripts/configure.sh --keep ... --remove ... -y` (the answers given).
+
+The questions, in order (the default is in brackets):
+
+1. For each tier-3 app in the profile that is installed: "Disable <name>
+   (<pkg>)? You can turn it back on any time." [No]
+2. "Disable the telemetry, ads and promo packages (listed above)?" [Yes]
+3. "Disable the unused system leftovers (printing, live wallpapers,
+   screensavers...)?" [Yes]
+4. "Which apps must never be touched? Name them: navigation, music, phone link,
+   dashcam, TPMS, OBD." [none] A name that matches nothing is refused.
+5. "Is there a SIM card in the unit (4G)?" [No]
+6. "Keep the firmware updater?" [Yes]
+7. "Animation speed: 0.5 (faster), 0 (off), or 1 (leave)?" [0.5]
+8. "Compile apps ahead of time now? It takes 5 to 30 minutes with the unit on."
+   [Yes]
+9. "Turn off always-on Wi-Fi and Bluetooth scanning?" [Yes]
+10. "Clear app caches if storage is over 85% full?" [No]
+11. "Any apps you keep but do not need running in the background?" [none]
+    Do not offer navigation, music, phone link or radio.
+12. "Use Private DNS to block trackers? Every lookup goes to that resolver, and
+    if it is unreachable apps say 'no internet'." [No]
+13. "Replace the home screen with headroom home (no permissions, no internet)?"
+    [Yes]
+14. "Up to 6 apps for the home screen dock, in order:" [none]
+15. "Two or three apps to time in the benchmark (your navigation and music,
+    say):" [first two unguarded third-party dock apps]
+
+`ALLOW_RISKY` is never asked. It only changes with `--allow-risky`, after the
+evidence is written into the profile (see "Overriding a guard").
+
+## Preconditions
+
+1. `scripts/connect.sh <hu-ip>` (or `--pair` for Android 11+).
+2. `adb devices` must list the unit as `device`. `unauthorized` means a person
+   must tap **Allow** on the unit; do not retry in a loop.
+3. `scripts/preflight.sh` runs before anything else. It is read-only and writes
+   the first snapshot; later runs never overwrite it.
+
 ## Current implementation
 
-Phases 0 to 16 are implemented (the launcher is written but has not been built
+Phases 0 to 17 are implemented (the launcher is written but has not been built
 here: this machine had no JDK or Android SDK):
 
 ```sh
@@ -120,10 +164,14 @@ install rollback logic. `all.sh` runs the whole pass and stops at every gate.
 Phase 16 is the catalog: `catalog/validate.py` checks schema, profiles, `tested`
 honesty and identifiers; `scripts/contribute.sh` interviews a person, refuses
 IP/MAC/VIN/e-mail/phone/coordinate-shaped answers, fills the facts the scripts
-already recorded, and validates the YAML before printing the git commands. The
-next phase is agent and user docs (Phase 17), then CI (Phase 18).
+already recorded, and validates the YAML before printing the git commands.
+Phase 17 adds the agent and user documentation: `PROMPT.md`, `llms.txt`, the
+`skills/headunit-debloat` skill, and `docs/` (how it works, gotchas, car safety,
+adding a unit, why not root, FAQ). `tests/test_docs.py` checks that every
+`scripts/<name>.sh --flag` in the docs appears in that script's help. The next
+phase is CI (Phase 18).
 
-## Order of operations (once the full tool exists)
+## Order of operations
 
 ```sh
 scripts/connect.sh <hu-ip>
@@ -181,6 +229,13 @@ agree, write the evidence into the profile's `packages.txt` comment, then run
 | ADB will not come back and a car function is broken | ADB off after the reboot                             | on the unit: Settings > Apps (show system apps) > enable each app in `report/manual-undo-<batch>.txt`, then reboot |
 | HOME is wrong and no laptop is at hand              | launcher handover                                    | on the unit: Settings > Apps > headroom home > Open by default > Clear defaults (or Disable)                       |
 | Start over                                          |                                                      | `scripts/restore.sh --all`                                                                                         |
+
+## Adding a new unit
+
+Follow `docs/ADDING-A-UNIT.md`: an agent reads `report/discover-*.txt`, proposes
+a profile, has a person verify every package, and only then adds it. The field
+runbook in `headroom-plan.md` is the long version. A catalog entry is written
+with `scripts/contribute.sh`; it never contains an identifier.
 
 ## Reporting
 

@@ -1,0 +1,48 @@
+# headroom
+
+> Declutter and speed up an Android car head unit over ADB. No root, nothing
+> uninstalled, every step reversible.
+
+headroom runs from a laptop and talks to an Android head unit over ADB. It
+measures the unit first, disables the telemetry, ads, promo and preloaded apps
+the owner does not use, applies reversible speed settings, optionally replaces
+the home screen, and asks a person at the car to confirm the reverse camera,
+steering-wheel buttons, radio, Bluetooth calls, navigation, sleep and wake after
+every batch. It never roots, flashes, factory-resets, opens factory menus,
+uninstalls, or reads personal data.
+
+## Start here
+
+- `AGENTS.md` — the contract: interview, hard rules, order of operations,
+  recovery. Read this first.
+- `README.md` — what changes, what it will not do, and how to run it.
+- `PROMPT.md` — a paste-ready block for a coding assistant.
+- `CLAUDE.md` — the four rules that matter most, for Claude Code.
+- `llms.txt` — this index.
+
+## Docs
+
+- `docs/CONNECTING.md` — hotspot, ADB methods, pairing, pyadb, reconnecting.
+- `docs/HOW-IT-WORKS.md` — the levers, the guard table, what is not used and why.
+- `docs/CAR-SAFETY.md` — when and where to run, the car checks, distraction.
+- `docs/ADDING-A-UNIT.md` — from a discovery report to a reviewed profile.
+- `docs/BENCHMARKING.md` — the measurement rules.
+- `docs/GOTCHAS.md` — inherited surprises and field notes.
+- `docs/WHY-NOT-ROOT.md` — why the shell user is enough.
+- `docs/FAQ.md` — warranty, updates, CarPlay, Private DNS, older units.
+
+## Data
+
+- `data/common/` — shared never-disable lists, app names, car checks, patterns.
+- `data/profiles/` — per-unit package tiers and matches.
+- `catalog/devices/` — identifier-free entries for units that were tested.
+
+## Tests
+
+No head unit is needed:
+
+```sh
+python3 -m venv tools/venv
+tools/venv/bin/pip install -r requirements-dev.txt
+tools/venv/bin/python -m unittest discover -s tests -v
+```

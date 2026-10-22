@@ -3,7 +3,7 @@
 **Declutter and speed up an Android car head unit over ADB. No root, nothing
 uninstalled, every step reversible.**
 
-Work in progress. The implementation follows `headroom-plan.md`. See
+Work in progress. The implementation follows `headroom-plan.md`. Read
 `AGENTS.md` before running anything against a real head unit.
 
 ## Status
@@ -34,7 +34,105 @@ Implemented and covered by offline tests:
 - Phase 16: `catalog/schema.json`, `catalog/validate.py` and
   `scripts/contribute.sh` (identifier-free catalog entries)
 
-Not built yet: the remaining user docs and CI.
+Not built yet: CI (Phase 18).
+
+## What it changes
+
+| Area        | What headroom does                                                                                                 | Reversible?                                        |
+| ----------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| Packages    | disables tier 1 (telemetry, ads, promo), tier 2 (unused system leftovers) and the tier-3 apps the owner said no to | yes: `pm enable`, `restore.sh`, or Settings > Apps |
+| Animations  | window, transition and animator scales to 0.5 or 0                                                                 | yes: the old values are recorded                   |
+| Scanning    | always-on Wi-Fi and Bluetooth scanning off                                                                         | yes: the old values are recorded                   |
+| Background  | chosen apps cannot run in the background (`appops`)                                                                | yes: the old mode is recorded                      |
+| Storage     | optional cache trim when `/data` is over 85% full                                                                  | caches rebuild themselves                          |
+| Private DNS | optional filtering resolver, with a self-test and automatic revert                                                 | yes: both keys are recorded                        |
+| Compilation | ahead-of-time compile of apps and the launcher                                                                     | not needed: Android redoes it                      |
+| HOME        | optional replacement launcher with no permissions and no internet                                                  | yes: `launcher/install.sh --undo`                  |
+| Measurement | before/after RAM, processes, HOME and app cold-start times                                                         | n/a                                                |
+
+## What it will not do
+
+- root the unit, remount or write `/system`, or flash firmware
+- change MCU or CAN-bus settings
+- open factory, engineering or test menus
+- factory-reset the unit (it can erase the CAN profile and steering-wheel keys)
+- uninstall anything (`pm disable-user` only)
+- read contacts, call logs, messages, navigation history or location
+- run while the car is moving
+
+## Quickstart (read-only, once connected)
+
+```sh
+scripts/connect.sh <hu-ip>          # or --pair ... for Android 11+
+scripts/preflight.sh                # facts + the one-time snapshot
+scripts/discover.sh                 # read-only inventory -> report/discover-*.txt
+scripts/configure.sh --keep ...     # the interview -> headroom.conf
+scripts/benchmark.sh --label before --runs 5
+scripts/verify.sh                   # automatic health checks
+scripts/debloat.sh --tier 1 --dry-run
+scripts/debloat.sh --tier 1 -y      # only after the person agrees
+scripts/verify.sh --manual          # a person answers the car checks
+scripts/close-adb.sh <hu-ip>        # end the session
+```
+
+The full order is in `AGENTS.md`. The snapshot is written to
+`~/.headroom/<device-id>/snapshot/`, outside the repository. It is the record
+undo depends on, so the first run wins and later runs never overwrite it.
+
+## Reversibility
+
+`scripts/restore.sh --all` re-enables every package headroom disabled, restores
+every recorded setting and app-op in reverse order, and puts HOME back.
+
+It is honest about what it does not cover:
+
+- **Ahead-of-time compilation is not undone.** Android redoes it when idle
+  anyway; there is nothing to restore.
+- **Packages disabled outside headroom are untouched.** Only headroom's own
+  batch records are replayed.
+- **A removed APK cannot be restored.** That is why nothing is uninstalled.
+- **A vendor launcher can be re-enabled**, but if HOME does not stay,
+  `scripts/stock-launcher.sh --enable --make-home` is the recovery.
+
+## Scripts
+
+| Script                      | What it does                                         | Reboots?                   |
+| --------------------------- | ---------------------------------------------------- | -------------------------- |
+| `scripts/connect.sh`        | connect over ADB; never scans the network            | no                         |
+| `scripts/close-adb.sh`      | turn debugging off and prove the port closed         | no                         |
+| `scripts/preflight.sh`      | facts and the first snapshot; read-only              | no                         |
+| `scripts/discover.sh`       | package inventory and profile suggestions; read-only | no                         |
+| `scripts/configure.sh`      | the interview; writes `headroom.conf` only           | no                         |
+| `scripts/benchmark.sh`      | before/after metrics                                 | only with `--boot`         |
+| `scripts/debloat.sh`        | disable one tier and record the batch                | yes                        |
+| `scripts/verify.sh`         | automatic checks and the manual gate                 | `--acc-test` waits for one |
+| `scripts/restore.sh`        | enable packages, restore tweaks and HOME             | yes                        |
+| `scripts/bisect.sh`         | narrow a bad batch to one package                    | only with `--reboot-each`  |
+| `scripts/tune.sh`           | recorded speed settings and compile                  | no                         |
+| `scripts/launcher.sh`       | install and hand over headroom home                  | no; a person reboots after |
+| `scripts/stock-launcher.sh` | disable the vendor launcher after a soak             | yes                        |
+| `scripts/drift.sh`          | report firmware drift; `--fix` re-applies it         | no; `--fix` yes            |
+| `scripts/all.sh`            | the whole pass, stopping at every gate               | yes                        |
+| `scripts/contribute.sh`     | write and validate a catalog entry                   | no                         |
+
+## The launcher
+
+`headroom home` is a small home screen: clock, date, up to six dock apps, an app
+grid and options. Its acceptance budget:
+
+| Property                | Target                             |
+| ----------------------- | ---------------------------------- |
+| permissions             | zero                               |
+| runtime dependencies    | none                               |
+| release APK             | under 150 KB                       |
+| RAM with home on screen | under 40 MB PSS                    |
+| touch target            | at least 76 dp                     |
+| motion                  | no animation except press feedback |
+| background components   | none                               |
+| Android                 | minSdk 26, targetSdk 34            |
+
+`tests/test_launcher_static.py` enforces the parts that need no build. See
+`launcher/README.md` for the build steps and the emulator checks.
 
 ## Development
 
@@ -46,8 +144,19 @@ tools/venv/bin/pip install -r requirements-dev.txt
 tools/venv/bin/python -m unittest discover -s tests -v
 ```
 
-`tools/venv/` is git-ignored. The launcher build needs a JDK and the Android
-SDK; see `launcher/README.md`.
+`tools/venv/` is git-ignored. The tests run every script against
+`tests/fake_adb.py`, which keeps state in JSON and exits 92 on any command it
+does not explicitly support. No head unit is needed.
+
+Syntax and shell checks:
+
+```sh
+bash -n scripts/*.sh
+shellcheck scripts/*.sh
+python3 catalog/validate.py
+```
+
+The launcher build needs a JDK and the Android SDK; see `launcher/README.md`.
 
 ## Safety
 
@@ -57,41 +166,30 @@ SDK; see `launcher/README.md`.
 - Disable only (`pm disable-user`); never uninstall.
 - A person at the car answers the car checks. No script or agent may answer
   them on that person's behalf.
+- Close ADB at the end of every session.
 
-## Quickstart (read-only, once connected)
+Details: `docs/CAR-SAFETY.md`.
 
-```sh
-scripts/connect.sh <hu-ip>          # or --pair ... for Android 11+
-scripts/preflight.sh                # facts + the one-time snapshot
-scripts/discover.sh                 # read-only inventory -> report/discover-*.txt
-scripts/configure.sh --keep ...      # the interview -> headroom.conf
-scripts/benchmark.sh --label before --runs 5
-scripts/verify.sh                   # automatic health checks
-scripts/debloat.sh --tier 1 --dry-run
-scripts/debloat.sh --tier 1 -y      # only after the person agrees
-scripts/verify.sh --manual          # a person answers the car checks
-scripts/close-adb.sh <hu-ip>        # end the session
-```
+## For AI agents
 
-The snapshot is written to `~/.headroom/<device-id>/snapshot/`, outside the
-repository. It is the record undo will depend on, so the first run wins and
-later runs never overwrite it.
-
-## Tests
-
-No head unit is needed:
-
-```sh
-python3 -m unittest discover -s tests -v
-bash -n scripts/*.sh
-shellcheck scripts/*.sh
-```
-
-The tests run every script against `tests/fake_adb.py`, which keeps state in
-JSON and exits 92 on any command it does not explicitly support.
+Start with `AGENTS.md`. `PROMPT.md` is a paste-ready block for a coding
+assistant; `CLAUDE.md` is the short form; `llms.txt` indexes the docs;
+`skills/headunit-debloat/SKILL.md` packages the same workflow as a skill.
+`docs/ADDING-A-UNIT.md` covers turning a discovery report into a reviewed
+profile.
 
 ## Connecting
 
-See `docs/CONNECTING.md` for hotspot setup, Android 11 wireless pairing,
-macOS Local Network privacy, the `tools/pyadb` fallback, and closing ADB at the
-end of a session.
+See `docs/CONNECTING.md` for hotspot setup, Android 11 wireless pairing, macOS
+Local Network privacy, the `tools/pyadb` fallback, and closing ADB at the end of
+a session.
+
+## Credits and licences
+
+The design draws on **dumbtv** (agent contract, read-only preflight/discovery,
+never-disable lists, fake-ADB tests, catalog) and **cleanyourtv**
+(disable-not-uninstall, recovery records, guarded batches, launcher handover,
+drift, the pure-Python ADB client, closing ADB). See `NOTICE.md`.
+
+Code is MIT (`LICENSE`). Catalog data under `catalog/devices/` is CC BY-SA 4.0
+(`catalog/LICENSE`).

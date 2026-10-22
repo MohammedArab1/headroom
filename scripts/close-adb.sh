@@ -8,7 +8,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 HOST=""
 KEEP_PAIRING=0
 usage() {
-  printf 'usage: scripts/close-adb.sh <hu-ip> [--keep-pairing] [--dry-run]\n' >&2
+  printf 'usage: scripts/close-adb.sh <hu-ip> [--keep-pairing] [--dry-run] [-y]\n' >&2
   exit 2
 }
 
@@ -16,6 +16,9 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --keep-pairing) KEEP_PAIRING=1; shift ;;
     --dry-run|-y|--yes) common_flag "$1"; shift ;;
+    -h|--help)
+      printf 'usage: scripts/close-adb.sh <hu-ip> [--keep-pairing] [--dry-run] [-y]\n'
+      exit 0 ;;
     -*) usage ;;
     *)
       [[ -z $HOST ]] || usage

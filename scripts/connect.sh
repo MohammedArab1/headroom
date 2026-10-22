@@ -22,6 +22,11 @@ while [[ $# -gt 0 ]]; do
       PORT=$2; shift 2 ;;
     --tcpip)
       MODE=tcpip; shift ;;
+    -h|--help)
+      printf 'usage: scripts/connect.sh <hu-ip>[:port] [-y] [--dry-run]\n'
+      printf '       scripts/connect.sh --pair <hu-ip>:<pair-port> <code> --port <connect-port> [-y] [--dry-run]\n'
+      printf '       scripts/connect.sh --tcpip [-y] [--dry-run]\n'
+      exit 0 ;;
     --dry-run|-y|--yes)
       common_flag "$1"; shift ;;
     -*)
