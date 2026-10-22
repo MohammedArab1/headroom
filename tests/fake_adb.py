@@ -84,6 +84,18 @@ if args[:1] == ["push"]:
     S.setdefault("pushed", []).append(target)
     save()
     reply(f"{source}: 1 file pushed")
+if args[:1] == ["pull"]:
+    if len(args) != 3:
+        sys.exit(93)
+    source, target = args[1], args[2]
+    if source in S.get("pull_fail", []):
+        print(f"adb: error: failed to pull '{source}'", file=sys.stderr)
+        sys.exit(1)
+    Path(target).parent.mkdir(parents=True, exist_ok=True)
+    Path(target).write_bytes(b"fake")
+    S.setdefault("pulled", []).append(target)
+    save()
+    reply(f"{source}: 1 file pulled")
 if args[:1] != ["shell"]:
     sys.exit(93)
 cmd = " ".join(args[1:])
@@ -136,6 +148,22 @@ if cmd == "df /data":
             ),
         )
     )
+m = re.fullmatch(r"stat -c %s (\S+)", cmd)
+if m:
+    reply(str(S.get("apk_sizes", {}).get(m.group(1), 1048576)))
+m = re.fullmatch(r"wc -c < (\S+)", cmd)
+if m:
+    reply(str(S.get("apk_sizes", {}).get(m.group(1), 1048576)))
+m = re.fullmatch(r"screencap -p (\S+)", cmd)
+if m:
+    S.setdefault("screencaps", []).append(m.group(1))
+    save()
+    reply()
+m = re.fullmatch(r"rm -f (\S+)", cmd)
+if m:
+    S.setdefault("removed", []).append(m.group(1))
+    save()
+    reply()
 if cmd == "wm size":
     reply(S.get("wm_size", "Physical size: 1280x720"))
 if cmd == "wm density":

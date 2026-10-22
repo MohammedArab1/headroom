@@ -22,8 +22,6 @@ done
 need_device
 load_device_facts
 home_comp=$(home_component)
-[[ $LABELS == 1 ]] && note "--labels is not implemented yet; reporting package names only"
-[[ $SCREENS == 1 ]] && note "--screens is not implemented yet; no screenshot taken"
 
 installed=$(installed_set)
 disabled=$(disabled_set)
@@ -31,6 +29,22 @@ third=$(third_set)
 [[ -n $installed ]] || die "could not read the package list from $SERIAL"
 paths_raw=$(dev_ok 'pm list packages -f')
 known=$(list_of "$(cfile candidates.txt)")
+
+if [[ $LABELS == 1 ]]; then
+  if [[ -z ${AAPT2:-} ]]; then
+    sdk=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}
+    [[ -n $sdk ]] && AAPT2="$sdk/build-tools/34.0.0/aapt2"
+  fi
+  if [[ -z ${AAPT2:-} ]] || ! command -v "$AAPT2" >/dev/null 2>&1; then
+    warn "--labels needs aapt2: set AAPT2 or ANDROID_HOME. Reporting package names only."
+    LABELS=0
+  elif [[ $DRY_RUN == 1 ]]; then
+    note "--labels would pull each candidate APK and read its label with aapt2"
+  else
+    WORK=$(mktemp -d "${TMPDIR:-/tmp}/headroom-labels.XXXXXX")
+    trap 'rm -rf "$WORK"' EXIT
+  fi
+fi
 
 TELEMETRY_RE='analytics|telemetry|tracker|tracking|crash|logger|logkit|feedback|bugreport|report|stat(s|istics)?|mtklogger|loggerui'
 ADS_RE='(^|\.)ads?([._]|$)|adservice|advert|promo|recommend|push|messagebox|splash'
@@ -66,12 +80,36 @@ EOF
 }
 one_line() { printf '%s' "$1" | tr '\n' ' ' | sed 's/[[:space:]]*$//'; }
 
-candidate_block() {  # pkg category tier state kind path launcher-count services receivers why
+label_for() {  # pkg apath; prints the application label, or nothing
+  local pkg=$1 apath=$2 size apk label
+  [[ -n $apath ]] || return 0
+  size=$(dev "stat -c %s $apath" | head -n 1)
+  case $size in
+    ''|*[!0-9]*) size=$(dev "wc -c < $apath" | tr -d '[:space:]' | head -n 1) ;;
+  esac
+  case $size in ''|*[!0-9]*) size=0 ;; esac
+  if [[ $size -gt 52428800 ]]; then
+    note "label: skipping $pkg (APK is over 50 MB)"
+    return 0
+  fi
+  apk="$WORK/$pkg.apk"
+  if ! "$ADB" -s "$SERIAL" pull "$apath" "$apk" >/dev/null 2>&1; then
+    note "label: could not pull $pkg"
+    return 0
+  fi
+  label=$("$AAPT2" dump badging "$apk" 2>/dev/null \
+    | sed -n "s/^application-label:'\(.*\)'$/\1/p" | head -n 1)
+  rm -f "$apk"
+  printf '%s' "$label"
+}
+
+candidate_block() {  # pkg category tier state kind path launcher-count services receivers why label
   local p=$1 cat=$2 tier=$3 state=$4 kind=$5 path=$6 lc=$7 services=$8 receivers=$9 why=${10:-}
-  local icon="no"
+  local label=${11:-} icon="no"
   [[ $lc -gt 0 ]] && icon="yes ($lc)"
   printf '  %-44s %-10s tier %-7s %-8s %s\n' "$p" "$cat" "$tier" "$state" "$kind"
   printf '      apk: %s\n' "${path:-unknown}"
+  [[ -z $label ]] || printf '      label: %s\n' "$label"
   printf '      launcher icon: %s\n' "$icon"
   printf '      services: %s\n' "${services:-(none)}"
   printf '      receivers: %s\n' "${receivers:-(none)}"
@@ -147,7 +185,9 @@ while IFS= read -r p; do
     | grep -oE 'android\.intent\.action\.[A-Z_]+|[A-Za-z0-9_.]+\.(ACC|REVERSE|KEY|ILL)[A-Za-z0-9_.]*' \
     | sort -u | head -n 8 | tr '\n' ',' | sed 's/,$//; s/,/, /g')
   apath=$(path_for "$p")
-  block=$(candidate_block "$p" "$category" "$tier" "$state" "$kind" "$apath" "$lc" "$services" "$receivers" "$why")
+  label=""
+  if [[ $LABELS == 1 && $DRY_RUN == 0 ]]; then label=$(label_for "$p" "$apath"); fi
+  block=$(candidate_block "$p" "$category" "$tier" "$state" "$kind" "$apath" "$lc" "$services" "$receivers" "$why" "$label")
   if [[ -z $why && ($category == car-name || $category == vendor) ]]; then
     block="$block"$'\n'"      note: verify by hand ($category)"
   fi
@@ -199,13 +239,35 @@ A11Y_SHOW=${A11Y:-}
 ADMINS_SHOW=$(printf '%s\n' "$ADMINS" | sed '/^$/d' | tr '\n' ' ')
 [[ -z $ADMINS_SHOW ]] && ADMINS_SHOW="(none)"
 
+SCREENSHOT=""
+if [[ $SCREENS == 1 ]]; then
+  if [[ $DRY_RUN == 1 ]]; then
+    note "--screens would capture the app drawer to report/"
+  else
+    shot_ts=$(date +%Y%m%d-%H%M%S)
+    shot_remote=/data/local/tmp/headroom-screen.png
+    mkdir -p "$REPORT"
+    dev screencap -p "$shot_remote" >/dev/null 2>&1 \
+      || warn "could not run screencap on $SERIAL"
+    if "$ADB" -s "$SERIAL" pull "$shot_remote" "$REPORT/screen-$shot_ts.png" >/dev/null 2>&1; then
+      SCREENSHOT="$REPORT/screen-$shot_ts.png"
+      note "screenshot: $SCREENSHOT (it may show personal data; report/ is git-ignored)"
+    else
+      warn "could not pull the screenshot from $SERIAL"
+    fi
+    dev rm -f "$shot_remote" >/dev/null 2>&1 || true
+  fi
+fi
+
 report_file="$REPORT/discover-$(date +%Y%m%d-%H%M%S).txt"
 mkdir -p "$REPORT"
 {
   printf 'headroom discover · %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   printf 'profile %s · API %s · %s installed · %s disabled · %s third-party · %s candidates\n' \
     "$PROFILE" "$SDK" "$n_installed" "$n_disabled" "$n_third" "$N_CAND"
-  printf 'core (never touched): %s · other (not suggested): %s\n\n' "$N_CORE" "$N_OTHER"
+  printf 'core (never touched): %s · other (not suggested): %s\n' "$N_CORE" "$N_OTHER"
+  [[ -z $SCREENSHOT ]] || printf 'screenshot: %s (git-ignored; may show personal data)\n' "$SCREENSHOT"
+  printf '\n'
   printf '%s\n' "$SECTION1"
   printf '\n2. looks car-critical: verify, probably keep\n'
   if [[ -n $SEC2 ]]; then printf '%s' "$SEC2"; else printf '  (none)\n'; fi

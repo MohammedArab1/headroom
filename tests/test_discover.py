@@ -42,7 +42,7 @@ class DiscoverTest(unittest.TestCase):
         for r in self.runs:
             r.tmp.cleanup()
 
-    def run_discover(self, *args):
+    def run_discover(self, *args, env=None):
         state = {
             "installed": INSTALLED,
             "disabled": ["com.vendor.ads"],
@@ -57,13 +57,18 @@ class DiscoverTest(unittest.TestCase):
         }
         r = Run(state=state, profile="fixture-unit")
         self.runs.append(r)
-        p = r("discover.sh", *args)
+        p = r("discover.sh", *args, env=env)
         reports = list((Path(r.tmp.name) / "report").glob("discover-*.txt"))
         return r, p, reports
 
     def report_text(self, reports):
         self.assertEqual(len(reports), 1, msg=f"expected one report, got {reports}")
         return reports[0].read_text()
+
+    def shell_commands(self, r):
+        return [
+            " ".join(c[3:]) for c in r.calls() if c[:3] == ["-s", "test-hu", "shell"]
+        ]
 
     def test_report_has_every_section_and_category(self):
         _, p, reports = self.run_discover()
@@ -171,10 +176,7 @@ class DiscoverTest(unittest.TestCase):
     def test_discover_changes_nothing(self):
         r, p, _ = self.run_discover()
         self.assertEqual(p.returncode, 0, msg=p.stdout + p.stderr)
-        for call in r.calls():
-            if call[:3] != ["-s", "test-hu", "shell"]:
-                continue
-            cmd = call[3]
+        for cmd in self.shell_commands(r):
             for forbidden in (
                 "pm disable-user",
                 "pm enable",
@@ -188,12 +190,87 @@ class DiscoverTest(unittest.TestCase):
                     forbidden, cmd, msg=f"discover changed the unit: {cmd}"
                 )
 
-    def test_optional_flags_are_honest(self):
-        _, p, reports = self.run_discover("--labels", "--screens")
+    def test_screens_captures_and_removes_the_device_file(self):
+        r, p, reports = self.run_discover("--screens")
         self.assertEqual(p.returncode, 0, msg=p.stdout + p.stderr)
-        self.assertIn("--labels is not implemented yet", p.stderr)
-        self.assertIn("--screens is not implemented yet", p.stderr)
+        shots = list((Path(r.tmp.name) / "report").glob("screen-*.png"))
+        self.assertEqual(1, len(shots))
+        self.assertIn(
+            "screencap -p /data/local/tmp/headroom-screen.png",
+            self.shell_commands(r),
+        )
+        self.assertIn("/data/local/tmp/headroom-screen.png", r.state()["removed"])
+        self.assertIn("screenshot:", self.report_text(reports))
+
+    def test_screens_dry_run_touches_nothing(self):
+        r, p, reports = self.run_discover("--screens", "--dry-run")
+        self.assertEqual(p.returncode, 0, msg=p.stdout + p.stderr)
+        self.assertIn("would capture", p.stderr)
+        self.assertEqual([], list((Path(r.tmp.name) / "report").glob("screen-*.png")))
+        commands = self.shell_commands(r)
+        self.assertFalse(any(c.startswith("screencap") for c in commands))
         self.report_text(reports)
+
+    def test_labels_reads_the_apk_label_and_deletes_the_temp_files(self):
+        r, p, reports = self.run_discover("--labels")
+        self.assertEqual(p.returncode, 0, msg=p.stdout + p.stderr)
+        text = self.report_text(reports)
+        self.assertIn("label: Label for com.vendor.telemetry", text)
+        pulled = [x for x in r.state().get("pulled", []) if x.endswith(".apk")]
+        self.assertTrue(pulled)
+        self.assertTrue(any(x.endswith("com.vendor.telemetry.apk") for x in pulled))
+        for path in pulled:
+            self.assertFalse(
+                Path(path).exists(), msg=f"temporary APK left behind: {path}"
+            )
+
+    def test_labels_skip_apks_over_50_mb(self):
+        path = "/system/app/com.vendor.telemetry/base.apk"
+        r = Run(
+            state={
+                "installed": INSTALLED,
+                "disabled": ["com.vendor.ads"],
+                "third": ["com.example.app"],
+                "dumpsys": DUMPSYS,
+                "apk_sizes": {path: 60 * 1024 * 1024},
+            },
+            profile="fixture-unit",
+        )
+        self.runs.append(r)
+        p = r("discover.sh", "--labels")
+        self.assertEqual(p.returncode, 0, msg=p.stdout + p.stderr)
+        self.assertIn("skipping com.vendor.telemetry", p.stderr)
+        self.assertFalse(
+            any(
+                x.endswith("com.vendor.telemetry.apk")
+                for x in r.state().get("pulled", [])
+            )
+        )
+
+    def test_labels_without_aapt2_falls_back_to_package_names(self):
+        r, p, reports = self.run_discover(
+            "--labels", env={"AAPT2": "/nonexistent/aapt2"}
+        )
+        self.assertEqual(p.returncode, 0, msg=p.stdout + p.stderr)
+        self.assertIn("needs aapt2", p.stderr)
+        self.assertEqual([], r.state().get("pulled", []))
+        self.assertNotIn("label:", self.report_text(reports))
+
+    def test_screens_and_labels_do_not_change_packages_or_settings(self):
+        r, p, _ = self.run_discover("--screens", "--labels")
+        self.assertEqual(p.returncode, 0, msg=p.stdout + p.stderr)
+        for cmd in self.shell_commands(r):
+            for forbidden in (
+                "pm disable-user",
+                "pm enable",
+                "settings put",
+                "settings delete",
+                "pm install",
+                "pm uninstall",
+            ):
+                self.assertNotIn(
+                    forbidden, cmd, msg=f"discover changed the unit: {cmd}"
+                )
 
 
 if __name__ == "__main__":

@@ -10,12 +10,16 @@ With the unit connected:
 
 ```sh
 scripts/preflight.sh
-scripts/discover.sh
+scripts/discover.sh --labels --screens
 ```
 
 `report/discover-<date>.txt` lists packages by tier, app labels, the real API
 level and claimed release, RAM, screen, launcher claimants and suggestions. It
-never changes the unit.
+never changes the unit. `--labels` pulls each candidate APK to a temporary
+directory, reads `application-label` with `aapt2` (set `AAPT2` or
+`ANDROID_HOME`), and deletes it; APKs over 50 MB are skipped. `--screens`
+captures the app drawer into `report/`, which may show personal data and is
+git-ignored.
 
 ## 2. Propose a profile
 

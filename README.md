@@ -71,7 +71,7 @@ the field sessions are the next step.
 ```sh
 scripts/connect.sh <hu-ip>          # or --pair ... for Android 11+
 scripts/preflight.sh                # facts + the one-time snapshot
-scripts/discover.sh                 # read-only inventory -> report/discover-*.txt
+scripts/discover.sh --labels --screens  # read-only inventory, app names and a screenshot
 scripts/configure.sh --keep ...     # the interview -> headroom.conf
 scripts/benchmark.sh --label before --runs 5
 scripts/verify.sh                   # automatic health checks

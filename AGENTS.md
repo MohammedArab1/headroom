@@ -182,6 +182,7 @@ real head unit yet.
 ```sh
 scripts/connect.sh <hu-ip>
 scripts/preflight.sh
+scripts/discover.sh --labels --screens
 scripts/configure.sh ...                       # answers from the interview
 scripts/benchmark.sh --label before --runs 5
 scripts/debloat.sh --tier 1 --dry-run          # show the person the plan

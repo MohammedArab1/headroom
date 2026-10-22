@@ -60,6 +60,7 @@ class Run:
         env = dict(
             os.environ,
             ADB=str(ROOT / "tests/fake_adb.py"),
+            AAPT2=str(ROOT / "tests/fixtures/aapt2"),
             SERIAL="test-hu",
             CONF=str(self.conf),
             HEADROOM_STATE=str(self.home),
@@ -82,15 +83,18 @@ class Run:
             env.pop("ADB_SERIAL", None)
         return env
 
-    def __call__(self, script, *args, stdin=""):
+    def __call__(self, script, *args, stdin="", env=None):
         # /bin/bash on purpose: on macOS it is bash 3.2, the version the scripts must support.
         path = Path(script)
         if not path.is_absolute():
             direct = ROOT / path
             path = direct if direct.exists() else ROOT / "scripts" / path
+        full = self.env()
+        if env:
+            full.update(env)
         return subprocess.run(
             ["/bin/bash", str(path), *args],
-            env=self.env(),
+            env=full,
             input=stdin,
             text=True,
             capture_output=True,

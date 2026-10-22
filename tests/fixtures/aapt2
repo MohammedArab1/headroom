@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Minimal aapt2 stand-in for the offline discovery tests. Prints a label derived
+# from the APK file name; the real tool reads the APK's manifest.
+case ${1:-} in
+  dump)
+    apk=${3:-}
+    pkg=$(basename "$apk" .apk)
+    echo "package: name='$pkg'"
+    echo "application-label:'Label for $pkg'"
+    ;;
+esac
+exit 0
