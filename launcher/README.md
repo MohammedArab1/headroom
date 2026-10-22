@@ -60,6 +60,7 @@ Build the APK, then:
 ```sh
 launcher/emulator-check.sh                       # all four sizes
 launcher/emulator-check.sh --only hr-1024x600 --behavior
+launcher/emulator-check.sh --only hr-1024x600 --ui
 launcher/emulator-check.sh --apk path/to/app-release.apk
 ```
 
@@ -72,6 +73,13 @@ HOME ten times and fails if the package list was reloaded; then it disables a
 docked app, screenshots the dock without it, re-enables it, and screenshots it
 back. The reload line is silent unless the script sets `log.tag.headroom` to
 `DEBUG`.
+
+`--ui` opens All apps, Options and the hidden-apps dialog, changes Dock slots
+and checks that the value survives a process restart, drives the D-pad until a
+tile is focused, and opens the long-press menu, with a screenshot of each. It
+runs on the AVD selected by `--only`, or on `hr-1024x600` otherwise. The check
+waits four seconds before each screenshot: the headless compositor updates
+slower than the accessibility hierarchy.
 
 The dock in the screenshots comes from `launcher/headroom.local.properties`, so
 write it before building (as `install.sh` does) for a full dock. The bottom

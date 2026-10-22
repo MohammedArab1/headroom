@@ -26,10 +26,13 @@ Implemented and covered by offline tests:
 - Phase 12: the `launcher/` app (headroom home) — built, unit-tested and
   linted in Docker (24 KB release APK, zero permissions, no lint issues) and
   checked on four emulator sizes: the whole dock stays on screen, HOME presses
-  do not re-scan, and disabling a docked app updates the dock; real-unit checks
-  still pending
+  do not re-scan, and disabling a docked app updates the dock. Options, All
+  apps, the long-press menu and D-pad focus are exercised on the emulator too;
+  real-unit checks still pending
 - Phase 13: `launcher/install.sh`, `scripts/launcher.sh` and
-  `scripts/stock-launcher.sh` (handover, 2-boot soak gate, rollback)
+  `scripts/stock-launcher.sh` (handover, 2-boot soak gate, rollback) — install,
+  HOME handover, `--enable --make-home` and vendor re-enable detection
+  exercised on an emulator
 - Phase 14: `scripts/drift.sh` (what a firmware update undid, with `--fix`
   through fresh guards)
 - Phase 15: `scripts/all.sh` (the whole pass, stopping at every gate)
@@ -44,8 +47,10 @@ All 18 phases are implemented. The launcher was built and linted in Docker
 (`launcher/docker-build.sh`): unit tests and `lintRelease` pass, the release APK
 is 24 KB with zero permissions, no background components and no runtime
 dependencies. The four emulator checks in the plan pass (1024×600, 1280×720,
-1920×720 and 720×1280 portrait). Everything that needs a car still remains:
-nothing has been tested on a real head unit yet.
+1920×720 and 720×1280 portrait). The launcher handover, `--enable --make-home`
+and the check for a vendor launcher that comes back at boot were also exercised
+on an emulator. Everything that needs a car still remains: nothing has been
+tested on a real head unit yet.
 
 ## What it changes
 

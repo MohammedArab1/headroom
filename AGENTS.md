@@ -153,8 +153,9 @@ all JUnit tests and `lintRelease` pass, and the release APK is 24 KB with zero
 permissions. `launcher/emulator-check.sh` then booted the four plan resolutions
 on a local SDK emulator: the whole dock including All apps is on screen in
 each, ten HOME presses cause no re-scan, and disabling a docked app removes it
-from the dock until it is enabled again. It still needs a real car before the
-phase is done.
+from the dock until it is enabled again. `--ui` also exercises Options, the All
+apps grid, the hidden-apps dialog, the long-press menu and D-pad focus. It still
+needs a real car before the phase is done.
 
 Phase 13 is the handover: `launcher/install.sh` (also reachable as
 `scripts/launcher.sh`) builds or takes `--apk`, pushes and runs `pm install -r`,
@@ -167,6 +168,11 @@ launcher only after a 2-boot soak, applies every non-HOME guard (with
 changed build; `--fix` re-applies the packages through fresh guards, re-applies
 the recorded tweaks with the Private DNS self-test, and re-takes HOME with the
 install rollback logic. `all.sh` runs the whole pass and stops at every gate.
+On an emulator, `install.sh` took HOME from Pixel Launcher, `stock-launcher.sh
+--disable` refused the vendor's guards until the documented `ALLOW_RISKY`
+evidence was supplied, then detected the emulator re-enabling the vendor at
+boot; `--enable --make-home` restored it. The real 2-boot soak and the car
+checks still need a unit.
 Phase 16 is the catalog: `catalog/validate.py` checks schema, profiles, `tested`
 honesty and identifiers; `scripts/contribute.sh` interviews a person, refuses
 IP/MAC/VIN/e-mail/phone/coordinate-shaped answers, fills the facts the scripts

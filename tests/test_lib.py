@@ -238,8 +238,11 @@ class LibTest(unittest.TestCase):
         for f in self.source_files():
             text = f.read_text()
             for word in forbidden:
-                self.assertNotIn(
-                    word, text, msg=f"{f} contains forbidden command: {word}"
+                # Word boundaries: input swipe is not the wipe command.
+                pattern = re.compile(r"\b" + re.escape(word) + r"\b")
+                self.assertIsNone(
+                    pattern.search(text),
+                    msg=f"{f} contains forbidden command: {word}",
                 )
 
     def test_fake_adb_unknown_command_exits_92(self):

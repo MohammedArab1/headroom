@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Boot the four plan resolutions, install the release APK, and take screenshots.
-# Usage: launcher/emulator-check.sh [--apk PATH] [--only AVD] [--behavior]
+# Usage: launcher/emulator-check.sh [--apk PATH] [--only AVD] [--behavior] [--ui]
 #
 # Needs the Android SDK (ANDROID_HOME, or ~/Library/Android/sdk) with:
 #   emulator, platform-tools, and system-images;android-33;google_apis;arm64-v8a
@@ -17,12 +17,13 @@ APK=$ROOT/launcher/app/build/outputs/apk/release/app-release.apk
 OUT=$ROOT/report/emulator
 ONLY=""
 BEHAVIOR=0
+UI=0
 PORT=5554
 SERIAL=emulator-5554
 EMU_PID=""
 
 usage() {
-  printf 'usage: launcher/emulator-check.sh [--apk PATH] [--only AVD] [--behavior]\n'
+  printf 'usage: launcher/emulator-check.sh [--apk PATH] [--only AVD] [--behavior] [--ui]\n'
   printf 'AVDs: hr-1024x600 hr-1280x720 hr-1920x720 hr-720x1280\n'
 }
 
@@ -31,6 +32,7 @@ while [[ $# -gt 0 ]]; do
     --apk) [[ $# -ge 2 ]] || { echo "--apk needs a path" >&2; exit 2; }; APK=$2; shift 2 ;;
     --only) [[ $# -ge 2 ]] || { echo "--only needs an AVD name" >&2; exit 2; }; ONLY=$2; shift 2 ;;
     --behavior) BEHAVIOR=1; shift ;;
+    --ui) UI=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown flag: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -41,6 +43,7 @@ done
 [[ -x $AVDMANAGER ]] || { echo "avdmanager not found at $AVDMANAGER; install cmdline-tools" >&2; exit 2; }
 [[ -f $APK ]] || { echo "no APK at $APK; run launcher/docker-build.sh first" >&2; exit 2; }
 mkdir -p "$OUT"
+CHECK_TARGET=${ONLY:-hr-1024x600}
 
 # avdmanager is a Java tool. Homebrew's JDK is keg-only on macOS.
 if [[ -z ${JAVA_HOME:-} && -d /opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ]]; then
@@ -142,6 +145,11 @@ screenshot() {  # file
   [[ -s $1 ]]
 }
 
+screenshot_settled() {  # file; headless swiftshader needs time to compose
+  sleep 4
+  screenshot "$1"
+}
+
 first_docked_package() {
   local packages candidate
   packages=$("$ADB" -s "$SERIAL" shell pm list packages | tr -d '\r')
@@ -197,6 +205,176 @@ behavior_checks() {  # avd name
   screenshot "$OUT/$name-dock-enabled.png" || true
 }
 
+ui_dump() {
+  "$ADB" -s "$SERIAL" shell rm -f /data/local/tmp/ui.xml >/dev/null 2>&1 || true
+  "$ADB" -s "$SERIAL" shell uiautomator dump /data/local/tmp/ui.xml >/dev/null 2>&1 || true
+  "$ADB" -s "$SERIAL" shell cat /data/local/tmp/ui.xml 2>/dev/null | tr -d '\r'
+}
+
+ui_xml() {
+  local xml i
+  for i in 1 2 3; do
+    xml=$(ui_dump)
+    if [[ $xml == *"<hierarchy"* ]]; then
+      printf '%s' "$xml"
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+ui_count() {  # attr value
+  ui_xml | grep -o "<node[^>]*$1=\"$2\"[^>]*>" | grep -c .
+}
+
+ui_count_prefix() {  # attr prefix
+  ui_xml | grep -o "<node[^>]*$1=\"$2[^\"]*\"[^>]*>" | grep -c .
+}
+
+ui_bounds() {  # attr value
+  local node
+  node=$(ui_xml | grep -o "<node[^>]*$1=\"$2\"[^>]*>" | head -n 1)
+  [[ -n $node ]] || return 1
+  printf '%s' "$node" | sed -n 's/.*bounds="\[\([0-9]*\),\([0-9]*\)\]\[\([0-9]*\),\([0-9]*\)\]".*/\1 \2 \3 \4/p'
+}
+
+ui_bounds_prefix() {  # attr prefix
+  local node
+  node=$(ui_xml | grep -o "<node[^>]*$1=\"$2[^\"]*\"[^>]*>" | head -n 1)
+  [[ -n $node ]] || return 1
+  printf '%s' "$node" | sed -n 's/.*bounds="\[\([0-9]*\),\([0-9]*\)\]\[\([0-9]*\),\([0-9]*\)\]".*/\1 \2 \3 \4/p'
+}
+
+ui_tap() {  # attr value
+  local b
+  b=$(ui_bounds "$1" "$2") || return 1
+  # shellcheck disable=SC2086
+  set -- $b
+  "$ADB" -s "$SERIAL" shell input tap $(( ($1 + $3) / 2 )) $(( ($2 + $4) / 2 ))
+}
+
+ui_tap_prefix() {  # attr prefix
+  local b
+  b=$(ui_bounds_prefix "$1" "$2") || return 1
+  # shellcheck disable=SC2086
+  set -- $b
+  "$ADB" -s "$SERIAL" shell input tap $(( ($1 + $3) / 2 )) $(( ($2 + $4) / 2 ))
+}
+
+ui_tiles() {
+  ui_xml | grep -o '<node[^>]*class="android.view.View"[^>]*content-desc="[^"]\+"[^>]*>' | grep -c .
+}
+
+ui_focused_tiles() {
+  ui_xml | grep -o '<node[^>]*content-desc="[^"]\+"[^>]*focused="true"[^>]*>' | grep -c .
+}
+
+ui_key() {  # keycode
+  "$ADB" -s "$SERIAL" shell input keyevent "$1" >/dev/null 2>&1 || true
+  sleep 1
+}
+
+ui_home() {
+  "$ADB" -s "$SERIAL" shell am start -W -n app.headroom.home/.HomeActivity >/dev/null 2>&1 || true
+  sleep 1
+  ui_key KEYCODE_HOME
+}
+
+ui_reset_options() {
+  ui_tap text "Reset to defaults" || return 1
+  sleep 1
+  ui_tap text "OK" || return 1
+  sleep 1
+  [[ $(ui_count_prefix text "Dock slots: 5") -ge 1 ]]
+}
+
+ui_checks() {  # avd name
+  local name=$1 tiles item b
+  echo "ui checks"
+
+  # Start from the build defaults so the check is repeatable.
+  ui_home
+  ui_tap text "Options" || { echo "FAIL: could not open Options" >&2; return 1; }
+  sleep 1
+  ui_reset_options || { echo "FAIL: could not reset to defaults" >&2; return 1; }
+  ui_key KEYCODE_BACK
+  tiles=$(ui_tiles)
+  echo "  home tiles: $tiles"
+  [[ $tiles -ge 4 ]] || { echo "FAIL: the dock did not render" >&2; return 1; }
+
+  # All apps.
+  ui_tap content-desc "All apps" || { echo "FAIL: could not open All apps" >&2; return 1; }
+  sleep 1
+  tiles=$(ui_tiles)
+  echo "  all-apps tiles on screen: $tiles"
+  screenshot_settled "$OUT/$name-allapps.png" || true
+  [[ $tiles -ge 10 ]] || { echo "FAIL: the app grid is empty" >&2; return 1; }
+  ui_key KEYCODE_BACK
+
+  # Options rows and the hidden-apps dialog.
+  ui_tap text "Options" || { echo "FAIL: could not open Options" >&2; return 1; }
+  sleep 1
+  for item in "Dock slots: " "Clock: " "Grid columns: " "Hidden apps ("; do
+    [[ $(ui_count_prefix text "$item") -ge 1 ]] \
+      || { echo "FAIL: Options row missing: $item" >&2; return 1; }
+  done
+  screenshot_settled "$OUT/$name-options.png" || true
+  ui_tap_prefix text "Hidden apps (" \
+    || { echo "FAIL: could not open Hidden apps" >&2; return 1; }
+  sleep 1
+  [[ $(ui_count text "OK") -ge 1 ]] \
+    || { echo "FAIL: the hidden-apps dialog did not open" >&2; return 1; }
+  screenshot_settled "$OUT/$name-hidden.png" || true
+  ui_key KEYCODE_BACK
+
+  # A setting must survive a new process.
+  ui_tap_prefix text "Dock slots" \
+    || { echo "FAIL: could not tap Dock slots" >&2; return 1; }
+  sleep 1
+  [[ $(ui_count_prefix text "Dock slots: 6") -ge 1 ]] \
+    || { echo "FAIL: dock slots did not change to 6" >&2; return 1; }
+  "$ADB" -s "$SERIAL" shell am force-stop app.headroom.home >/dev/null 2>&1 || true
+  sleep 1
+  ui_home
+  ui_tap text "Options" || { echo "FAIL: could not reopen Options" >&2; return 1; }
+  sleep 1
+  [[ $(ui_count_prefix text "Dock slots: 6") -ge 1 ]] \
+    || { echo "FAIL: dock slots did not survive a restart" >&2; return 1; }
+  ui_reset_options || { echo "FAIL: could not restore defaults" >&2; return 1; }
+  ui_key KEYCODE_BACK
+
+  # D-pad: the chips come first, then the dock tiles.
+  for item in 1 2 3 4 5 6 7 8; do
+    ui_key KEYCODE_DPAD_DOWN
+    [[ $(ui_focused_tiles) -ge 1 ]] && break
+  done
+  [[ $(ui_focused_tiles) -ge 1 ]] \
+    || { echo "FAIL: the D-pad did not focus a tile" >&2; return 1; }
+  screenshot_settled "$OUT/$name-dpad.png" || true
+  echo "  D-pad focus reached a tile"
+
+  # Long press: the menu must offer all six actions.
+  b=$(ui_bounds content-desc "Clock") || b=$(ui_bounds content-desc "Settings") \
+    || { echo "FAIL: no dock tile to long-press" >&2; return 1; }
+  # shellcheck disable=SC2086
+  set -- $b
+  "$ADB" -s "$SERIAL" shell input swipe \
+    $(( ($1 + $3) / 2 )) $(( ($2 + $4) / 2 )) \
+    $(( ($1 + $3) / 2 )) $(( ($2 + $4) / 2 )) 1200 >/dev/null 2>&1 || true
+  sleep 1
+  for item in "Add to dock" "Remove from dock" "Move left" "Move right" "Hide" "App info"; do
+    [[ $(ui_count text "$item") -ge 1 ]] \
+      || { echo "FAIL: long-press menu missing: $item" >&2; return 1; }
+  done
+  screenshot_settled "$OUT/$name-longpress.png" || true
+  ui_key KEYCODE_BACK
+
+  ui_home
+  screenshot_settled "$OUT/$name-ui-home.png" || true
+  echo "  -> UI screenshots in $OUT"
+}
+
 while read -r name width height density orientation <&3; do
   [[ -n $name ]] || continue
   [[ -n $ONLY && $ONLY != "$name" ]] && continue
@@ -227,8 +405,14 @@ while read -r name width height density orientation <&3; do
     exit 1
   fi
   echo "  -> $OUT/$name.png"
-  if [[ $BEHAVIOR == 1 && $name == hr-1024x600 ]]; then
+  if [[ $BEHAVIOR == 1 && $name == "$CHECK_TARGET" ]]; then
     if ! behavior_checks "$name"; then
+      stop_avd
+      exit 1
+    fi
+  fi
+  if [[ $UI == 1 && $name == "$CHECK_TARGET" ]]; then
+    if ! ui_checks "$name"; then
       stop_avd
       exit 1
     fi
