@@ -72,6 +72,11 @@ if args == ["reboot"]:
     ):  # firmware that turns packages back on at boot
         if p in S["disabled"]:
             S["disabled"].remove(p)
+    for key, value in S.get("reset_settings_at_boot", {}).items():
+        if value is None:
+            S["settings"].pop(key, None)
+        else:
+            S["settings"][key] = value
     save()
     reply()
 if args[:1] == ["push"]:

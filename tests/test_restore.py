@@ -92,6 +92,8 @@ class RestoreTest(unittest.TestCase):
         )
         self.assertTrue(any(c == ["-s", "test-hu", "reboot"] for c in r.calls()))
         self.assertIn("left disabled (as it was)", p.stdout)
+        self.assertFalse((sd / "tweaks.tsv").exists())
+        self.assertFalse((sd / "tweaks.restoring.tsv").exists())
 
         calls = self.shell_calls(r)
         delete_i = next(
@@ -105,6 +107,18 @@ class RestoreTest(unittest.TestCase):
             if "settings put global window_animation_scale 1.0" in c
         )
         self.assertLess(delete_i, put_i)
+
+    def test_all_reports_values_that_do_not_stick(self):
+        r = self.new_run(
+            state={"reset_settings_at_boot": {"global window_animation_scale": "0.5"}}
+        )
+        sd = self.write_plan(r, "b1", ["com.vendor.ads\tenabled"])
+        (sd / "tweaks.tsv").write_text("setting\tglobal\twindow_animation_scale\t1.0\n")
+        p = r("restore.sh", "--all", "-y")
+        self.assertEqual(p.returncode, 1, msg=p.stdout + p.stderr)
+        self.assertIn("did not stick", p.stderr)
+        self.assertTrue((sd / "tweaks.tsv").exists())
+        self.assertFalse((sd / "tweaks.restoring.tsv").exists())
 
     def test_last_touches_only_newest_batch(self):
         r = self.new_run(state={"disabled": ["com.vendor.ads", "com.vendor.telemetry"]})
@@ -203,6 +217,7 @@ class RestoreTest(unittest.TestCase):
         self.assertFalse(any("settings put" in c for c in self.shell_calls(r)))
         self.assertFalse(any("set-home-activity" in c for c in self.shell_calls(r)))
         self.assertTrue((sd / "batches" / "b1.restored").exists())
+        self.assertTrue((sd / "tweaks.tsv").exists())
 
 
 if __name__ == "__main__":

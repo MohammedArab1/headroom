@@ -39,6 +39,7 @@ esac
 
 need_device
 TWEAKS="$STATE/tweaks.tsv"
+TWEAKS_PENDING=""
 
 batches_to_restore() {
   local b
@@ -89,6 +90,10 @@ restore_tweaks() {
   step "tweaks (reverse order)"
   local rows kind a b old
   rows=$(sed '1!G;h;$!d' "$TWEAKS")
+  if [[ $DRY_RUN == 0 ]]; then
+    TWEAKS_PENDING="$STATE/tweaks.restoring.tsv"
+    mv "$TWEAKS" "$TWEAKS_PENDING" || die "could not move $TWEAKS aside"
+  fi
   while IFS=$'\t' read -r kind a b old; do
     [[ -n $kind ]] || continue
     case $kind in
@@ -108,6 +113,40 @@ restore_tweaks() {
   done <<EOF
 $rows
 EOF
+  [[ $DRY_RUN == 1 ]] || note "tweaks record moved aside; it is checked after the reboot"
+}
+
+check_tweaks_after_reboot() {
+  [[ -n $TWEAKS_PENDING && -f $TWEAKS_PENDING ]] || return 0
+  local rows kind a b old got bad=""
+  rows=$(cat "$TWEAKS_PENDING")
+  while IFS=$'\t' read -r kind a b old; do
+    [[ -n $kind ]] || continue
+    case $kind in
+      setting)
+        got=$(dev1 settings get "$a" "$b")
+        if [[ $old == null ]]; then
+          [[ $got == null ]] || bad="$bad $a/$b(want unset, got ${got:-empty})"
+        else
+          [[ $got == "$old" ]] || bad="$bad $a/$b(want $old, got ${got:-empty})"
+        fi ;;
+      appop)
+        got=$(dev "cmd appops get $a $b" | sed -n 's/.*: *\([a-z][a-z]*\).*/\1/p' | head -n 1)
+        [[ $got == "$old" ]] || bad="$bad appop:$a/$b(want $old, got ${got:-empty})" ;;
+      *) bad="$bad unknown:$kind" ;;
+    esac
+  done <<EOF
+$rows
+EOF
+  if [[ -n $bad ]]; then
+    mv "$TWEAKS_PENDING" "$TWEAKS"
+    warn "the restored values did not stick after the reboot:$bad"
+    warn "the record is back at $TWEAKS; run scripts/restore.sh --all again, or set them by hand"
+    return 1
+  fi
+  rm -f "$TWEAKS_PENDING"
+  note "restored tweaks stayed after the reboot"
+  return 0
 }
 
 restore_home() {
@@ -222,7 +261,11 @@ fi
 if [[ $MODE == all ]]; then
   restore_tweaks
   restore_home
-  [[ $DRY_RUN == 1 ]] || reboot_wait
+  if [[ $DRY_RUN == 0 ]]; then
+    sleep 1
+    reboot_wait
+    check_tweaks_after_reboot || bad=1
+  fi
 elif [[ $MODE == last ]]; then
   [[ $DRY_RUN == 1 ]] || reboot_wait
 fi
