@@ -17,6 +17,10 @@
     <string name="clock_setting">Clock</string>
     <string name="grid_columns">Grid columns</string>
     <string name="hidden_apps">Hidden apps</string>
+    <string name="dock_slots_value">Dock slots: %1$d</string>
+    <string name="clock_value">Clock: %1$s</string>
+    <string name="grid_columns_value">Grid columns: %1$s</string>
+    <string name="hidden_apps_value">Hidden apps (%1$d)</string>
     <string name="previous_home">Open the previous home screen</string>
     <string name="reset">Reset to defaults</string>
     <string name="about">About</string>

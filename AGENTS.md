@@ -103,8 +103,8 @@ evidence is written into the profile (see "Overriding a guard").
 
 ## Current implementation
 
-Phases 0 to 18 are implemented (the launcher has not been compiled here: this
-machine had no JDK or Android SDK):
+Phases 0 to 18 are implemented (the launcher is built and linted in Docker; the
+emulator and car checks are pending):
 
 ```sh
 scripts/connect.sh <hu-ip>
@@ -148,7 +148,10 @@ Phase 12 is the launcher in `launcher/`. Its pure-Java logic (`App`,
 glue and resources are written. `tests/test_launcher_static.py` enforces zero
 permissions, no background components, no runtime dependencies and the SDK
 floor. To build it, follow `launcher/README.md`; the Gradle 8.9 wrapper is
-committed.
+committed. `launcher/docker-build.sh` built and linted it without a local SDK:
+all JUnit tests and `lintRelease` pass, and the release APK is 24 KB with zero
+permissions. The emulator checks in the plan still need a device or a machine
+with the SDK emulator installed.
 
 Phase 13 is the handover: `launcher/install.sh` (also reachable as
 `scripts/launcher.sh`) builds or takes `--apk`, pushes and runs `pm install -r`,
@@ -173,9 +176,10 @@ adding a unit, why not root, FAQ). `tests/test_docs.py` checks that every
 Phase 18 is `.github/workflows/ci.yml`: the scripts job runs the offline suite,
 shellcheck and the catalog validator on Ubuntu and macOS (macOS uses bash 3.2),
 and the launcher job builds, lints and checks the APK budget with JDK 17 and the
-Android SDK. The Gradle wrapper (8.9) is committed. This is the launcher's first
-real compile. CI is followed by the field sessions; nothing has been tested on a
-real head unit yet.
+Android SDK. The Gradle wrapper (8.9) is committed. The same checks run locally
+with `launcher/docker-build.sh`, which is how the launcher was first compiled.
+CI is followed by the field sessions; nothing has been tested on a real head unit
+yet.
 
 ## Order of operations
 

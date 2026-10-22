@@ -23,9 +23,9 @@ Implemented and covered by offline tests:
   Private DNS self-test, ahead-of-time compile)
 - Phase 10: `scripts/restore.sh` and `scripts/bisect.sh`
 - Phase 11: `scripts/verify.sh` (automatic checks, manual gate, ignition test)
-- Phase 12: the `launcher/` app (headroom home) — source and static acceptance
-  checks; it has not been compiled or run here (no JDK or Android SDK on this
-  machine yet)
+- Phase 12: the `launcher/` app (headroom home) — built, unit-tested and
+  linted in Docker: 24 KB release APK, zero permissions, no lint issues;
+  emulator and real-unit checks still pending
 - Phase 13: `launcher/install.sh`, `scripts/launcher.sh` and
   `scripts/stock-launcher.sh` (handover, 2-boot soak gate, rollback)
 - Phase 14: `scripts/drift.sh` (what a firmware update undid, with `--fix`
@@ -38,9 +38,11 @@ Implemented and covered by offline tests:
 - Phase 18: `.github/workflows/ci.yml` (scripts on Ubuntu and macOS, the real
   launcher build, APK budgets), the PR template and the unit-report issue form
 
-All 18 phases are implemented. The launcher has not been compiled on this
-machine; CI is its first build. Nothing has been tested on a real head unit:
-the field sessions are the next step.
+All 18 phases are implemented. The launcher was built and linted in Docker
+(`launcher/docker-build.sh`): unit tests and `lintRelease` pass, the release APK
+is 24 KB with zero permissions, no background components and no runtime
+dependencies. The emulator checks and everything that needs a car still remain:
+nothing has been tested on a real head unit yet.
 
 ## What it changes
 
@@ -124,7 +126,8 @@ It is honest about what it does not cover:
 ## The launcher
 
 `headroom home` is a small home screen: clock, date, up to six dock apps, an app
-grid and options. Its acceptance budget:
+grid and options. The release build is 24 KB with zero permissions and no lint
+issues. Its acceptance budget:
 
 | Property                | Target                             |
 | ----------------------- | ---------------------------------- |
@@ -163,6 +166,15 @@ python3 catalog/validate.py
 ```
 
 The launcher build needs a JDK and the Android SDK; see `launcher/README.md`.
+Or run the whole build in Docker, with no local SDK:
+
+```sh
+launcher/docker-build.sh
+```
+
+Docker on macOS cannot run a hardware-accelerated Android emulator, so the
+visual/emulator checks still need a real device, a head unit, or a local SDK
+emulator.
 
 ## Safety
 

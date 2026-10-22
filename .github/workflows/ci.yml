@@ -56,14 +56,4 @@ jobs:
         working-directory: launcher
         run: ./gradlew --no-daemon testReleaseUnitTest lintRelease assembleRelease
       - name: budgets (size, zero permissions, no background components)
-        run: |
-          apk=launcher/app/build/outputs/apk/release/app-release.apk
-          size=$(stat -c %s "$apk"); echo "APK $((size/1024)) KB"
-          test "$size" -lt 153600 || { echo "over 150 KB"; exit 1; }
-          perms=$("$ANDROID_HOME/build-tools/34.0.0/aapt2" dump permissions "$apk" | grep uses-permission || true)
-          test -z "$perms" || { echo "the launcher must request no permissions: $perms"; exit 1; }
-          if grep -E '<(service|receiver|provider)' launcher/app/src/main/AndroidManifest.xml; then
-            echo "no background components allowed in the launcher"; exit 1
-          fi
-          deps=$(cd launcher && ./gradlew -q :app:dependencies --configuration releaseRuntimeClasspath | grep -E '^[+\\]---' || true)
-          test -z "$deps" || { echo "the launcher must have no runtime dependencies: $deps"; exit 1; }
+        run: launcher/check-budgets.sh

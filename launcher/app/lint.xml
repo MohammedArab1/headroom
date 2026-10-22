@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <lint>
-    <!-- The default set is the one CI enforces. Add an issue here only with a reason. -->
+    <!-- allowBackup=false is deliberate: the launcher stores only display settings. -->
+    <issue id="DataExtractionRules" severity="ignore" />
 </lint>

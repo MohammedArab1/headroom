@@ -70,10 +70,10 @@ public final class OptionsActivity extends Activity {
 
     /** Only the text changes, so focus stays on the row a person just used. */
     private void update() {
-        slotsRow.setText(getString(R.string.dock_slots) + ": " + cfg.dockSlots());
-        clockRow.setText(getString(R.string.clock_setting) + ": " + clockLabel());
-        columnsRow.setText(getString(R.string.grid_columns) + ": " + columnsLabel());
-        hiddenRow.setText(getString(R.string.hidden_apps) + " (" + cfg.hidden().size() + ")");
+        slotsRow.setText(getString(R.string.dock_slots_value, cfg.dockSlots()));
+        clockRow.setText(getString(R.string.clock_value, clockLabel()));
+        columnsRow.setText(getString(R.string.grid_columns_value, columnsLabel()));
+        hiddenRow.setText(getString(R.string.hidden_apps_value, cfg.hidden().size()));
     }
 
     private String nextClock() {
