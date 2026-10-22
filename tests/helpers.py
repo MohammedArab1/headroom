@@ -53,6 +53,7 @@ class Run:
         self.conf = t / "headroom.conf"
         self.conf.write_text(conf)
         self.home = t / "state-root"
+        self.catalog = t / "catalog"
         self.profile, self.data, self.preset_serial = profile, data, preset_serial
 
     def env(self):
@@ -74,6 +75,7 @@ class Run:
             PROFILE=self.profile,
             HEADROOM_DATA=str(self.data),
             HEADROOM_REPORT=str(Path(self.tmp.name) / "report"),
+            HEADROOM_CATALOG=str(self.catalog),
         )
         if not self.preset_serial:
             env.pop("SERIAL")

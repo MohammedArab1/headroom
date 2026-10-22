@@ -1,0 +1,31 @@
+# Copy this file to <id>.yaml, fill in what you know, and delete what you do not.
+# No IP addresses, MAC addresses, serial numbers, VINs, number plates, e-mails,
+# phone numbers, Wi-Fi names or coordinates. See tests/test_privacy.py.
+id: example-unit
+title: Example head unit (replace this)
+platform: unknown
+soc: unknown
+status: untested
+tested_on: "1970-01-01"
+models:
+  - "Replace with the model name"
+android:
+  claimed: "unknown"
+  sdk: 26
+ram_mb_real: 256
+screen: "1280x720@240dpi"
+developer_mode: "Settings > About > tap Build number 7 times (replace with the exact path)"
+adb:
+  method: wireless-debugging
+  first_connection_prompt: "Replace with what the unit shows on the first connection"
+ip_location: "Settings > Network (replace with where the unit shows its address)"
+profile: generic
+prompts: []
+launcher:
+  mechanism: none
+  quirk: "Replace this if the unit ignores set-home-activity"
+car_checks: {}
+benchmark: {}
+quirks: []
+known_limits: []
+notes: "Template only. status stays untested until a person ran the full pass."

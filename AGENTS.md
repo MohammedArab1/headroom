@@ -59,7 +59,7 @@ units.
 
 ## Current implementation
 
-Phases 0 to 15 are implemented (the launcher is written but has not been built
+Phases 0 to 16 are implemented (the launcher is written but has not been built
 here: this machine had no JDK or Android SDK):
 
 ```sh
@@ -79,6 +79,7 @@ scripts/stock-launcher.sh --disable          # optional, after the 2-boot soak
 scripts/verify.sh                            # after a firmware update: drift.sh
 scripts/drift.sh
 scripts/all.sh
+scripts/contribute.sh
 scripts/close-adb.sh <hu-ip>
 ```
 
@@ -116,7 +117,11 @@ launcher only after a 2-boot soak, applies every non-HOME guard (with
 changed build; `--fix` re-applies the packages through fresh guards, re-applies
 the recorded tweaks with the Private DNS self-test, and re-takes HOME with the
 install rollback logic. `all.sh` runs the whole pass and stops at every gate.
-The next phase is the catalog and `contribute.sh` (Phase 16).
+Phase 16 is the catalog: `catalog/validate.py` checks schema, profiles, `tested`
+honesty and identifiers; `scripts/contribute.sh` interviews a person, refuses
+IP/MAC/VIN/e-mail/phone/coordinate-shaped answers, fills the facts the scripts
+already recorded, and validates the YAML before printing the git commands. The
+next phase is agent and user docs (Phase 17), then CI (Phase 18).
 
 ## Order of operations (once the full tool exists)
 

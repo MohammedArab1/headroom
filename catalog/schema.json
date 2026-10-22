@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "headroom head-unit catalog entry",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "platform",
+    "android",
+    "ram_mb_real",
+    "developer_mode",
+    "adb",
+    "ip_location",
+    "profile",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]*$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3
+    },
+    "platform": {
+      "enum": [
+        "fyt",
+        "mtc",
+        "topway",
+        "mediatek",
+        "allwinner",
+        "rockchip",
+        "qualcomm",
+        "other",
+        "unknown"
+      ]
+    },
+    "soc": {
+      "type": "string"
+    },
+    "status": {
+      "enum": ["tested", "partial", "untested"]
+    },
+    "tested_on": {
+      "type": "string"
+    },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "android": {
+      "type": "object",
+      "required": ["claimed", "sdk"],
+      "properties": {
+        "claimed": {
+          "type": "string"
+        },
+        "sdk": {
+          "type": "integer",
+          "minimum": 26
+        }
+      }
+    },
+    "ram_mb_real": {
+      "type": "integer",
+      "minimum": 256
+    },
+    "screen": {
+      "type": "string",
+      "pattern": "^[0-9]+x[0-9]+@[0-9]+dpi$"
+    },
+    "developer_mode": {
+      "type": "string",
+      "minLength": 5
+    },
+    "adb": {
+      "type": "object",
+      "required": ["method"],
+      "properties": {
+        "method": {
+          "enum": ["wireless-debugging", "tcp5555", "usb-device-port", "none"]
+        },
+        "first_connection_prompt": {
+          "type": "string"
+        }
+      }
+    },
+    "ip_location": {
+      "type": "string"
+    },
+    "profile": {
+      "type": "string"
+    },
+    "prompts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "fix"]
+      }
+    },
+    "launcher": {
+      "type": "object",
+      "properties": {
+        "mechanism": {
+          "enum": ["set_home_activity", "home_picker", "none"]
+        },
+        "stock_package": {
+          "type": "string"
+        },
+        "stock_disabled_ok": {
+          "type": "boolean"
+        },
+        "quirk": {
+          "type": "string"
+        }
+      }
+    },
+    "car_checks": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": ["pass", "fail", "n/a", "untested"]
+      }
+    },
+    "benchmark": {
+      "type": "object",
+      "properties": {
+        "mem_available_kb": {
+          "type": "array"
+        },
+        "app_processes": {
+          "type": "array"
+        },
+        "home_ms": {
+          "type": "array"
+        }
+      }
+    },
+    "quirks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "known_limits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

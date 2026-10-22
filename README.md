@@ -19,10 +19,10 @@ Implemented and covered by offline tests:
 - Phase 6: `scripts/configure.sh` (the interview and `headroom.conf`)
 - Phase 7: `scripts/benchmark.sh` and `tools/bench_compare.py`
 - Phase 8: `scripts/debloat.sh` (one tier, one recorded batch)
-- Phase 10: `scripts/restore.sh` and `scripts/bisect.sh`
-- Phase 11: `scripts/verify.sh` (automatic checks, manual gate, ignition test)
 - Phase 9: `scripts/tune.sh` (recorded settings, background restriction, cache trim,
   Private DNS self-test, ahead-of-time compile)
+- Phase 10: `scripts/restore.sh` and `scripts/bisect.sh`
+- Phase 11: `scripts/verify.sh` (automatic checks, manual gate, ignition test)
 - Phase 12: the `launcher/` app (headroom home) — source and static acceptance
   checks; it has not been compiled or run here (no JDK or Android SDK on this
   machine yet)
@@ -31,8 +31,23 @@ Implemented and covered by offline tests:
 - Phase 14: `scripts/drift.sh` (what a firmware update undid, with `--fix`
   through fresh guards)
 - Phase 15: `scripts/all.sh` (the whole pass, stopping at every gate)
+- Phase 16: `catalog/schema.json`, `catalog/validate.py` and
+  `scripts/contribute.sh` (identifier-free catalog entries)
 
-Not built yet: the catalog tooling, the remaining user docs, and CI.
+Not built yet: the remaining user docs and CI.
+
+## Development
+
+The offline suite uses PyYAML for the catalog validator:
+
+```sh
+python3 -m venv tools/venv
+tools/venv/bin/pip install -r requirements-dev.txt
+tools/venv/bin/python -m unittest discover -s tests -v
+```
+
+`tools/venv/` is git-ignored. The launcher build needs a JDK and the Android
+SDK; see `launcher/README.md`.
 
 ## Safety
 

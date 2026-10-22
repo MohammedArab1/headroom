@@ -1,0 +1,2 @@
+# Offline tests and the catalog validator.
+pyyaml>=6
