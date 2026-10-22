@@ -103,8 +103,8 @@ evidence is written into the profile (see "Overriding a guard").
 
 ## Current implementation
 
-Phases 0 to 17 are implemented (the launcher is written but has not been built
-here: this machine had no JDK or Android SDK):
+Phases 0 to 18 are implemented (the launcher has not been compiled here: this
+machine had no JDK or Android SDK):
 
 ```sh
 scripts/connect.sh <hu-ip>
@@ -147,8 +147,8 @@ Phase 12 is the launcher in `launcher/`. Its pure-Java logic (`App`,
 `ConfigCodec`, `DockModel`, `GridMath`, `AppOrder`) has JUnit tests; the Android
 glue and resources are written. `tests/test_launcher_static.py` enforces zero
 permissions, no background components, no runtime dependencies and the SDK
-floor. To build it, follow `launcher/README.md`; the Gradle wrapper has not been
-generated yet.
+floor. To build it, follow `launcher/README.md`; the Gradle 8.9 wrapper is
+committed.
 
 Phase 13 is the handover: `launcher/install.sh` (also reachable as
 `scripts/launcher.sh`) builds or takes `--apk`, pushes and runs `pm install -r`,
@@ -168,8 +168,14 @@ already recorded, and validates the YAML before printing the git commands.
 Phase 17 adds the agent and user documentation: `PROMPT.md`, `llms.txt`, the
 `skills/headunit-debloat` skill, and `docs/` (how it works, gotchas, car safety,
 adding a unit, why not root, FAQ). `tests/test_docs.py` checks that every
-`scripts/<name>.sh --flag` in the docs appears in that script's help. The next
-phase is CI (Phase 18).
+`scripts/<name>.sh --flag` in the docs appears in that script's help.
+
+Phase 18 is `.github/workflows/ci.yml`: the scripts job runs the offline suite,
+shellcheck and the catalog validator on Ubuntu and macOS (macOS uses bash 3.2),
+and the launcher job builds, lints and checks the APK budget with JDK 17 and the
+Android SDK. The Gradle wrapper (8.9) is committed. This is the launcher's first
+real compile. CI is followed by the field sessions; nothing has been tested on a
+real head unit yet.
 
 ## Order of operations
 

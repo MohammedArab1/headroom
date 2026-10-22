@@ -5,7 +5,7 @@ from pathlib import Path
 
 from helpers import ROOT
 
-DOC_GLOBS = ["*.md", "docs/*.md", "skills/*/SKILL.md"]
+DOC_GLOBS = ["*.md", "docs/*.md", "launcher/README.md", "skills/*/SKILL.md"]
 SCRIPT = re.compile(r"scripts/([a-z0-9-]+\.sh)\b")
 FLAG = re.compile(r"(?<![\w-])(--[a-z][a-z0-9-]*|-y)(?=[\s,.)`=]|$)")
 

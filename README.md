@@ -33,8 +33,14 @@ Implemented and covered by offline tests:
 - Phase 15: `scripts/all.sh` (the whole pass, stopping at every gate)
 - Phase 16: `catalog/schema.json`, `catalog/validate.py` and
   `scripts/contribute.sh` (identifier-free catalog entries)
+- Phase 17: `PROMPT.md`, `llms.txt`, the `skills/headunit-debloat` skill, and
+  `docs/` (how it works, gotchas, car safety, adding a unit, why not root, FAQ)
+- Phase 18: `.github/workflows/ci.yml` (scripts on Ubuntu and macOS, the real
+  launcher build, APK budgets), the PR template and the unit-report issue form
 
-Not built yet: CI (Phase 18).
+All 18 phases are implemented. The launcher has not been compiled on this
+machine; CI is its first build. Nothing has been tested on a real head unit:
+the field sessions are the next step.
 
 ## What it changes
 

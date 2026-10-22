@@ -1,0 +1,120 @@
+name: Unit report
+description: Tell us about a head unit. No identifiers.
+title: "[unit] "
+labels: ["unit-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not include an IP address, MAC address, serial number, VIN, number
+        plate, Wi-Fi name, e-mail, phone number, contact or GPS coordinates.**
+
+        A maintainer turns a good report into a catalog entry with
+        `scripts/contribute.sh`. If you are not sure whether something is an
+        identifier, leave it out and describe where it is shown instead.
+
+  - type: input
+    id: catalog_id
+    attributes:
+      label: Catalog id
+      description: Lowercase letters, digits, dots and hyphens.
+      placeholder: "e.g. fyt-example-2024"
+    validations:
+      required: true
+
+  - type: input
+    id: title
+    attributes:
+      label: Unit title
+      description: Manufacturer and model, not a serial number.
+      placeholder: "e.g. Example brand 10-inch unit"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [fyt, mtc, topway, mediatek, allwinner, rockchip, qualcomm, other, unknown]
+    validations:
+      required: true
+
+  - type: input
+    id: android
+    attributes:
+      label: Android claimed and real API
+      description: What Settings > About says, and what `preflight.sh` read.
+      placeholder: "e.g. claims 13, real API 33"
+    validations:
+      required: true
+
+  - type: input
+    id: ram
+    attributes:
+      label: Real RAM (MB)
+      description: What `preflight.sh` read from /proc/meminfo, not the advertised figure.
+      placeholder: "e.g. 2048"
+    validations:
+      required: true
+
+  - type: input
+    id: screen
+    attributes:
+      label: Screen
+      placeholder: "e.g. 1280x720@240dpi"
+
+  - type: textarea
+    id: developer_mode
+    attributes:
+      label: How Developer options and ADB were enabled
+      description: Exact path and number of taps, if you remember it.
+      placeholder: "Settings > About > tap Build number N times"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: adb_method
+    attributes:
+      label: ADB method that worked
+      options: [wireless-debugging, tcp5555, usb-device-port, none]
+    validations:
+      required: true
+
+  - type: input
+    id: ip_location
+    attributes:
+      label: Where the unit shows its IP address
+      description: The menu path, not the address itself.
+      placeholder: "e.g. Settings > Network > Status"
+    validations:
+      required: true
+
+  - type: input
+    id: first_prompt
+    attributes:
+      label: First-connection prompt
+      description: What the unit showed the first time ADB connected.
+
+  - type: textarea
+    id: prompts
+    attributes:
+      label: Dialogs that blocked automation
+      description: One per line, as name|what dismissed it.
+
+  - type: textarea
+    id: quirks
+    attributes:
+      label: Quirks
+      description: Sleep, boot, launcher, audio, CAN-bus, anything surprising.
+
+  - type: textarea
+    id: car_checks
+    attributes:
+      label: Car checks
+      description: For each check in data/common/car-checks.txt, pass, fail or n/a.
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: The `verify.sh` table and the benchmark comparison. No identifiers.

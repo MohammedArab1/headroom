@@ -6,28 +6,19 @@ No permissions, no internet, no background components. Design rules live in
 
 ## Build
 
-The machine that wrote this did not have a JDK, Gradle or the Android SDK, so
-nothing here has been compiled yet. Do this once:
+The Gradle wrapper is committed (Gradle 8.9). You need JDK 17 and the Android
+SDK. The machine that wrote this launcher had neither, so the code has not
+been compiled locally; the CI `launcher` job is its first real compile.
 
 ```sh
-brew install openjdk@17 gradle
+brew install openjdk@17
 export JAVA_HOME="$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home"
 sdkmanager "platforms;android-34" "build-tools;34.0.0"
 ```
 
-Then generate the Gradle wrapper. The plan asks for Gradle 8.9 with AGP 8.5.2.
-If a newer Homebrew Gradle refuses to configure the project, run the wrapper
-task in an empty directory and copy the generated files in:
+Then, from `launcher/`:
 
 ```sh
-cd launcher
-gradle wrapper --gradle-version 8.9    # or generate in /tmp and copy
-```
-
-After that, only the wrapper is used:
-
-```sh
-cd launcher
 ./gradlew testReleaseUnitTest lintRelease assembleRelease
 ```
 
@@ -45,7 +36,8 @@ ls -l app/build/outputs/apk/release/app-release.apk                    # must be
 `tests/test_launcher_static.py` checks the parts of the budget that need no
 build: zero `uses-permission`, no services/receivers/providers, no runtime
 dependencies, minSdk 26 / targetSdk 34, and that the pure-Java classes import
-nothing from `android.*`.
+nothing from `android.*`. `.github/workflows/ci.yml` adds the real build, lint
+and APK budget checks.
 
 ## Per-car defaults
 
