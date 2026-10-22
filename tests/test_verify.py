@@ -1,3 +1,4 @@
+import json
 import unittest
 from pathlib import Path
 
@@ -77,9 +78,34 @@ class VerifyTest(unittest.TestCase):
             self.assertIn(name, p.stdout)
         self.assertNotIn("FAIL", p.stdout)
 
-    def test_disabled_never_package_fails(self):
+    def test_never_package_already_disabled_at_snapshot_is_ok(self):
         state = {"disabled": ["com.android.systemui"]}
         _, p = self.run_verify(state=state)
+        self.assertEqual(p.returncode, 0, msg=p.stdout + p.stderr)
+        self.assertIn("already off: com.android.systemui", p.stdout)
+        self.assertNotIn("FAIL", p.stdout)
+
+    def test_never_package_disabled_after_snapshot_fails(self):
+        r = Run(
+            state={
+                "installed": [
+                    "com.android.systemui",
+                    "com.android.inputmethod.latin",
+                    "com.vendor.launcher",
+                    "com.vendor.ads",
+                    "com.example.app",
+                ],
+                "third": ["com.example.app"],
+            },
+            profile="fixture-unit",
+        )
+        self.runs.append(r)
+        p0 = r("preflight.sh")
+        self.assertEqual(p0.returncode, 0, msg=p0.stdout + p0.stderr)
+        state = r.state()
+        state["disabled"].append("com.android.systemui")
+        r.state_file.write_text(json.dumps(state))
+        p = r("verify.sh")
         self.assertEqual(p.returncode, 1)
         self.assertIn("never", p.stdout)
         self.assertIn("FAIL", p.stdout)
@@ -174,7 +200,7 @@ class VerifyTest(unittest.TestCase):
         self.assertIn("a person at the car must answer", p.stderr)
 
     def test_automatic_failure_blocks_manual(self):
-        state = {"disabled": ["com.android.systemui"]}
+        state = {"logcat_crash": "Process: com.android.systemui, PID: 1234\n"}
         _, p = self.run_verify("--manual", "--answers", answers(), state=state)
         self.assertEqual(p.returncode, 1)
         self.assertIn("automatic checks failed", p.stderr)

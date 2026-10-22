@@ -47,13 +47,25 @@ EOF
   return 1
 }
 
-# never: nothing on a never list may be disabled.
-bad=""
+# never: nothing on a never list may be disabled by headroom. A package the
+# vendor shipped disabled is not headroom's doing; the snapshot proves it.
+snapshot_disabled=""
+if [[ -f $STATE/snapshot/packages-disabled.txt ]]; then
+  snapshot_disabled=$(sed -n 's/^package://p' "$STATE/snapshot/packages-disabled.txt")
+fi
+bad=""; already=""
 for p in $disabled; do
-  is_never "$p" && bad="$bad $p"
+  is_never "$p" || continue
+  if in_lines "$p" "$snapshot_disabled"; then
+    already="$already $p"
+  else
+    bad="$bad $p"
+  fi
 done
 if [[ -n $bad ]]; then
   fail never "disabled never-list package(s):$bad. Run scripts/restore.sh --package <pkg>"
+elif [[ -n $already ]]; then
+  row never ok "no never-list package was disabled by headroom (already off:$already)"
 else
   row never ok "no never-list package is disabled"
 fi
